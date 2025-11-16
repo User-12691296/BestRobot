@@ -80,8 +80,8 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const int MAX_DEGREES_X = -1800;
-const int MAX_DEGREES_Y = -3500;
+const int MAX_DEGREES_X = 500;
+const int MAX_DEGREES_Y = 500;
 
 class Mover {
   private:
@@ -465,7 +465,7 @@ void manualControlOverride()
     int xAxisInput = Controller.AxisB.position();
     
     // Check boundaries: stop if at limit and trying to go further
-    if ((xPos >= 0 && xAxisInput < 0) || (xPos <= MAX_DEGREES_X && xAxisInput > 0))
+    if ((xPos <= 0 && xAxisInput < 0) || (xPos >= MAX_DEGREES_X && xAxisInput > 0))
     {
       // At boundary and trying to go further - stop motor completely
       XMotor.stop(brake);
@@ -503,7 +503,7 @@ void manualControlOverride()
     int yAxisInput = Controller.AxisA.position();
     
     // Check boundaries: stop if at limit and trying to go further
-    if ((yPos >= 0 && yAxisInput < 0) || (yPos <= MAX_DEGREES_Y && yAxisInput > 0))
+    if ((yPos <= 0 && yAxisInput < 0) || (yPos >= MAX_DEGREES_Y && yAxisInput > 0))
     {
       // At boundary and trying to go further - stop motor completely
       YMotor.stop(brake);
@@ -560,7 +560,11 @@ void manualControlOverride()
     // Display coordinates in degrees (using positions already read above)
     Brain.Screen.setCursor(1, 1);
     Brain.Screen.clearLine();
-    Brain.Screen.print("X: %.1f  Y: %.1f  AxisB: %d  AxisA: %d", xPos, yPos, xAxisInput, yAxisInput);
+    Brain.Screen.print("X: %.1f deg  AxisB: %d", xPos, xAxisInput);
+    
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.clearLine();
+    Brain.Screen.print("Y: %.1f deg  AxisA: %d", yPos, yAxisInput);
 
   }
   XMotor.stop(brake);
