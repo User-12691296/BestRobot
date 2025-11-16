@@ -541,22 +541,34 @@ void manualControlOverride()
     {
       markerInProgress = true;
       markerDown = true;
+      // Set low torque for constant gentle pressure
+      MMotor.setMaxTorque(10, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(forward);
-      wait(200, msec);
-      MMotor.stop(brake);
       markerInProgress = false;
     }
-    //moves marker up if pressed and marker not already down
+    //moves marker up if pressed and marker already down
     if (Controller.ButtonRUp.pressing() && markerDown == true && markerInProgress == false)
     {
       markerInProgress = true;
       markerDown = false;
+      // Stop applying pressure and lift marker
+      MMotor.stop(brake);
+      // Reset to full torque for lifting
+      MMotor.setMaxTorque(100, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(reverse);
       wait(200, msec);
       MMotor.stop(brake);
       markerInProgress = false;
+    }
+    
+    // Keep marker pressing down with low torque when in down position
+    if (markerDown && !markerInProgress)
+    {
+      MMotor.setMaxTorque(10, percent);
+      MMotor.setVelocity(100, percent);
+      MMotor.spin(forward);
     }
     // Display coordinates in degrees (using positions already read above)
     Brain.Screen.setCursor(1, 1);
