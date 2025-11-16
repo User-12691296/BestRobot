@@ -433,7 +433,7 @@ void calibrateAllAxes()
     }
 
     //average contact position calculation
-    double avgDegX = samplesX[0] + samplesX[1] + samplesX[2] / SAMPLES;
+    double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / SAMPLES;
     double currentDegX = XMotor.position(degrees);
     XMotor.setPosition(currentDegX - avgDegX, degrees);
 }
