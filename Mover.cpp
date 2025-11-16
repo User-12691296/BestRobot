@@ -412,8 +412,12 @@ void calibrateAllAxes()
 
     //pause to settle 
     wait(2000,msec);
+    //move backwards more 
+    YMotor.setVelocity(RETRACT_SPEED*2, percent);
+    YMotor.spin(forward);
+    wait(3000, msec);
+    YMotor.stop(brake);
 
-    //calibrate x axis
   }
   //average contact position calculation
   double avgDeg = (samplesY[0] + samplesY[1] + samplesY[2]) / SAMPLES;
@@ -584,6 +588,106 @@ void manualControlOverride()
   YMotor.stop(brake);
 }
 
+void drawMenu(int selectedOption) {
+  const int NUM_OPTIONS = 5;
+  const char* menuOptions[] = {
+    "Manual Control",
+    "Automator",
+    "Switch Marker",
+    "Recalibration",
+    "Shutdown"
+  };
+  
+  // colors for each menu option
+  color optionColors[] = {blue, green, purple, yellow, orange};
+  
+  // Clear screen with the selected option's color
+  Brain.Screen.clearScreen(optionColors[selectedOption]);
+  
+  Brain.Screen.setPenColor(white);
+  Brain.Screen.setFont(mono15);
+  
+  // Draw menu options
+  for (int i = 0; i < NUM_OPTIONS; i++) {
+    Brain.Screen.setCursor(i + 1, 1);
+    
+    // Highlight selected option with arrow and bright color
+    if (i == selectedOption) {
+      Brain.Screen.setPenColor(yellow);
+      Brain.Screen.print("> %s <", menuOptions[i]);
+    } else {
+      Brain.Screen.setPenColor(white);
+      Brain.Screen.print("  %s", menuOptions[i]);
+    }
+  }
+  
+  Brain.Screen.setPenColor(white);
+  
+  // Navigation instructions
+  Brain.Screen.setPenColor(white);
+  Brain.Screen.setCursor(7, 1);
+  Brain.Screen.setFont(mono12);
+  Brain.Screen.print("Left/Right: Navigate");
+  Brain.Screen.setCursor(8, 1);
+  Brain.Screen.print("Check: Select");
+}
+
+int mainMenu ()
+{
+  int selectedOption = 0;
+  const int NUM_OPTIONS = 5;
+  
+  bool buttonPressed = false;
+  bool needsRedraw = true;
+  
+  while (true) {
+    // Only redraw when selection changes
+    if (needsRedraw) {
+      drawMenu(selectedOption);
+      needsRedraw = false;
+    }
+    
+    // Check for buttonLeft (navigate up)
+    if (Brain.buttonLeft.pressing()) {
+      if (!buttonPressed) {
+        buttonPressed = true;
+        selectedOption--;
+        if (selectedOption < 0) {
+          selectedOption = NUM_OPTIONS - 1; // Wrap to bottom
+        }
+        needsRedraw = true;
+        wait(200, msec); // Debounce
+      }
+    }
+    // Check for buttonRight (navigate down)
+    else if (Brain.buttonRight.pressing()) {
+      if (!buttonPressed) {
+        buttonPressed = true;
+        selectedOption++;
+        if (selectedOption >= NUM_OPTIONS) {
+          selectedOption = 0; // Wrap to top
+        }
+        needsRedraw = true;
+        wait(200, msec); // Debounce
+      }
+    }
+    // Check for buttonCheck (select option)
+    else if (Brain.buttonCheck.pressing()) {
+      if (!buttonPressed) {
+        buttonPressed = true;
+        wait(200, msec); // Show selection briefly
+        return selectedOption;
+      }
+    }
+    else {
+      buttonPressed = false;
+    }
+    
+    wait(50, msec);
+  }
+  
+  return selectedOption;
+}
 int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -592,18 +696,63 @@ int main() {
   MMotor.setPosition(0, degrees);
 
   // Begin project code
-
+  
+  // Initial calibration
   calibrateAllAxes();
-  manualControlOverride();
-
-  Mover m;
-
-  m.setXSpeed(3);
-
-  for (int i=0; i<500000; i++) {
-    m.tick();
-    if (i==250000) {
-      m.setXSpeed(-3);
+  
+  // Main menu loop
+  while (true) {
+    int selection = mainMenu();
+    
+    switch (selection) {
+      case 0: // Manual Control
+        //Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("Starting Manual Mode");
+        wait(500, msec);
+        manualControlOverride();
+        break;
+        
+      case 1: // Automator
+        //Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("Automator Mode");
+        Brain.Screen.setCursor(2, 1);
+        Brain.Screen.print("Not implemented yet");
+        wait(2, seconds);
+        break;
+        
+      case 2: // Switch Marker
+        //Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("Switch Marker");
+        Brain.Screen.setCursor(2, 1);
+        Brain.Screen.print("Move marker manually");
+        Brain.Screen.setCursor(3, 1);
+        Brain.Screen.print("Press TouchLED when done");
+        while (!TouchLED.pressing()) {
+          wait(50, msec);
+        }
+        wait(500, msec); // Debounce
+        break;
+        
+      case 3: // Recalibration
+        //Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("Recalibrating...");
+        calibrateAllAxes();
+        Brain.Screen.setCursor(2, 1);
+        Brain.Screen.print("Done!");
+        wait(1, seconds);
+        break;
+        
+      case 4: // Shutdown
+        //Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("Shutting down...");
+        wait(1, seconds);
+        Brain.programStop();
+        return 0;
     }
   }
 
