@@ -80,6 +80,9 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
+const int MAX_DEGREES_X = 999999;
+const int MAX_DEGREES_Y = 999999;
+
 class Mover {
   private:
     bool XTargetSet, YTargetSet, MTargetSet;
@@ -410,29 +413,60 @@ void calibrateYaxis()
   YMotor.setPosition(currentDeg - avgDeg, degrees);
 }
 
-void manualControlOverride(int maxX, int maxY)
+void manualControlOverride()
 {
 
   XMotor.spin(forward);
   YMotor.spin(forward);
+  bool markerDown = false;
+  bool markerInProgress = false;
   while (!Controller.ButtonFDown.pressing())
   {
+    //moves along the x-axis
     if (XCalDistance.objectDistance(mm) == 0 && Controller.AxisB.position() <= 0)
     {
+      //stops moving if it reaches the boundary and tries to go further
       XMotor.setVelocity(0, percent);
     }
     else
     {
       XMotor.setVelocity(Controller.AxisB.position(), percent);
     }
+
+    //moves along the y-axis
     if (YCalSwitch.pressing() && Controller.AxisA.position() <= 0)
     {
+      //stops moving if it reaches the boundary and tries to go further
       YMotor.setVelocity(0, percent);
     }
     else
     {
       YMotor.setVelocity(Controller.AxisA.position(), percent);
     }
+    //moves marker down if pressed and marker not already down
+    if (Controller.ButtonRDown.pressing() && markerDown == false && markerInProgress == false)
+    {
+      markerInProgress = true;
+      markerDown = true;
+      MMotor.setVelocity(100, percent);
+      MMotor.spin(forward);
+      wait(100, msec);
+      MMotor.stop(brake);
+      markerInProgress = false;
+    }
+    //moves marker up if pressed and marker not already down
+    if (!Controller.ButtonRDown.pressing() && markerDown == true && markerInProgress == false)
+    {
+      markerInProgress = true;
+      markerDown = false;
+      MMotor.setVelocity(100, percent);
+      MMotor.spin(reverse);
+      wait(100, msec);
+      MMotor.stop(brake);
+      markerInProgress = false;
+
+    }
+
   }
   XMotor.stop(brake);
   YMotor.stop(brake);
@@ -447,14 +481,8 @@ int main() {
 
   // Begin project code
 
-  /*while(true)
-  {
-    Brain.Screen.print("%f",XCalDistance.objectDistance(mm));
-    wait(100, msec);
-    Brain.Screen.clearLine();
-    
-  }*/
-  manualControlOverride(100000, 100000);
+  
+  manualControlOverride();
 
   Mover m;
 
