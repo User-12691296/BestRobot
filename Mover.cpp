@@ -464,15 +464,16 @@ void manualControlOverride()
     double xPos = XMotor.position(degrees);
     int xAxisInput = Controller.AxisB.position();
     
+
     // Check boundaries: stop if at limit and trying to go further
     if ((xPos <= 0 && xAxisInput < 0) || (xPos >= MAX_DEGREES_X && xAxisInput > 0))
     {
-      // At boundary and trying to go further - stop motor completely
+      //at boundary and trying to go further will stop motor completely
       XMotor.stop(brake);
     }
     else if (xAxisInput > 0)
     {
-      // Moving away from origin (forward direction)
+      //moving away from origin (forward direction)
       if (!xSpinningForward)
       {
         XMotor.stop();
@@ -483,7 +484,7 @@ void manualControlOverride()
     }
     else if (xAxisInput < 0)
     {
-      // Moving towards origin (reverse direction)
+      //moving towards origin (reverse direction)
       if (xSpinningForward)
       {
         XMotor.stop();
@@ -494,7 +495,7 @@ void manualControlOverride()
     }
     else
     {
-      // No input - stop
+      //no input will make it stop
       XMotor.stop(brake);
     }
 
@@ -505,12 +506,12 @@ void manualControlOverride()
     // Check boundaries: stop if at limit and trying to go further
     if ((yPos <= 0 && yAxisInput < 0) || (yPos >= MAX_DEGREES_Y && yAxisInput > 0))
     {
-      // At boundary and trying to go further - stop motor completely
+      //at boundary and trying to go further will stop motor completely
       YMotor.stop(brake);
     }
     else if (yAxisInput > 0)
     {
-      // Moving away from origin (forward direction)
+      //moving away from origin (forward direction)
       if (!ySpinningForward)
       {
         YMotor.stop();
@@ -521,7 +522,7 @@ void manualControlOverride()
     }
     else if (yAxisInput < 0)
     {
-      // Moving towards origin (reverse direction)
+      //moving towards origin (reverse direction)
       if (ySpinningForward)
       {
         YMotor.stop();
@@ -532,7 +533,7 @@ void manualControlOverride()
     }
     else
     {
-      // No input - stop
+      //no input will make it stop
       YMotor.stop(brake);
     }
     //moves marker down if pressed and marker not already down
