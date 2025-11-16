@@ -381,7 +381,7 @@ void calibrateAllAxes()
   for (int i = 0; i < SAMPLES; i++) //move away until not pressed
   {
     YMotor.setVelocity(RETRACT_SPEED, percent);
-    YMotor.spin(reverse);
+    YMotor.spin(forward);
     while (YCalSwitch.pressing()) 
     {
     }
@@ -391,13 +391,13 @@ void calibrateAllAxes()
     //move slowly toards sernsor unitl pressed
 
     YMotor.setVelocity(APPROACH_SPEED, percent);
-    YMotor.spin(forward);
+    YMotor.spin(reverse);
     while (!YCalSwitch.pressing()) 
     {
     }
     YMotor.stop(brake);
     //records position
-    samples[i] = YMotor.position(degrees);
+    samplesY[i] = YMotor.position(degrees);
 
     //pause to settle 
     wait(2000,msec);
@@ -405,7 +405,7 @@ void calibrateAllAxes()
     //calibrate x axis
   }
   //average contact position calculation
-  double avgDeg = (samples[0] + samples[1] + samples[2]) / SAMPLES;
+  double avgDeg = (samplesY[0] + samplesY[1] + samplesY[2]) / SAMPLES;
   //shift encoder so the position becomes 0
   double currentDeg = YMotor.position(degrees);
   YMotor.setPosition(currentDeg - avgDeg, degrees);
@@ -416,15 +416,15 @@ void calibrateAllAxes()
     for (int i = 0; i < SAMPLES; i++) //move away until not pressed
     {
       XMotor.setVelocity(RETRACT_SPEED, percent);
-      XMotor.spin(reverse);
-      while (XCalDistance.objectDistance(mm) < 50) 
+      XMotor.spin(forward);
+      while (XCalDistance.objectDistance(mm) < 60) 
       {
       }
 
       //mmove slowly towards sensor until 
       XMotor.setVelocity(APPROACH_SPEED, percent);
-      XMotor.spin(forward);
-      while (XCalDistance.objectDistance(mm) > 10) 
+      XMotor.spin(reverse);
+      while (XCalDistance.objectDistance(mm) > 40) 
       {
       }
       XMotor.stop(brake);
@@ -482,6 +482,8 @@ int main() {
     Brain.Screen.clearLine();
     
   }*/
+
+  calibrateAllAxes();
   manualControlOverride(100000, 100000);
 
   Mover m;
