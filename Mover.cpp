@@ -458,7 +458,7 @@ void manualControlOverride(float maxX, float maxY)
     YMotor.setVelocity(Controller.AxisA.position(), percent);
   }
   XMotor.stop(brake);
-  YMotor.stop(brake);
+  YMotor.stop(brake); //TEST
 }
 
 int main() {
