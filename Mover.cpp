@@ -29,12 +29,12 @@ brain Brain;
 // Robot configuration code.
 inertial BrainInertial = inertial();
 motor XMotor = motor(PORT3, true);
-motor YMotor = motor(PORT6, false);
+motor YMotor = motor(PORT6, true);
 motor MMotor = motor(PORT2, false);
 bumper YCalSwitch = bumper(PORT4);
 controller Controller = controller();
-optical XCalOptical = optical(PORT1);
 touchled TouchLED = touchled(PORT5);
+distance XCalDistance = distance(PORT1);
 
 
 // generating and setting random seed
@@ -51,52 +51,6 @@ void initializeRandomSeed(){
   srand(seed); 
 }
 
-// Converts a color to a string
-const char* convertColorToString(color col) {
-  if (col == colorType::red) return "red";
-  else if (col == colorType::green) return "green";
-  else if (col == colorType::blue) return "blue";
-  else if (col == colorType::white) return "white";
-  else if (col == colorType::yellow) return "yellow";
-  else if (col == colorType::orange) return "orange";
-  else if (col == colorType::purple) return "purple";
-  else if (col == colorType::cyan) return "cyan";
-  else if (col == colorType::black) return "black";
-  else if (col == colorType::transparent) return "transparent";
-  else if (col == colorType::red_violet) return "red_violet";
-  else if (col == colorType::violet) return "violet";
-  else if (col == colorType::blue_violet) return "blue_violet";
-  else if (col == colorType::blue_green) return "blue_green";
-  else if (col == colorType::yellow_green) return "yellow_green";
-  else if (col == colorType::yellow_orange) return "yellow_orange";
-  else if (col == colorType::red_orange) return "red_orange";
-  else if (col == colorType::none) return "none";
-  else return "unknown";
-}
-
-
-// Convert colorType to string
-const char* convertColorToString(colorType col) {
-  if (col == colorType::red) return "red";
-  else if (col == colorType::green) return "green";
-  else if (col == colorType::blue) return "blue";
-  else if (col == colorType::white) return "white";
-  else if (col == colorType::yellow) return "yellow";
-  else if (col == colorType::orange) return "orange";
-  else if (col == colorType::purple) return "purple";
-  else if (col == colorType::cyan) return "cyan";
-  else if (col == colorType::black) return "black";
-  else if (col == colorType::transparent) return "transparent";
-  else if (col == colorType::red_violet) return "red_violet";
-  else if (col == colorType::violet) return "violet";
-  else if (col == colorType::blue_violet) return "blue_violet";
-  else if (col == colorType::blue_green) return "blue_green";
-  else if (col == colorType::yellow_green) return "yellow_green";
-  else if (col == colorType::yellow_orange) return "yellow_orange";
-  else if (col == colorType::red_orange) return "red_orange";
-  else if (col == colorType::none) return "none";
-  else return "unknown";
-}
 
 
 void vexcodeInit() {
@@ -484,24 +438,32 @@ void calibrateAllAxes()
     XMotor.setPosition(currentDegX - avgDegX, degrees);
 }
 
-void manualControlOverride(float maxX, float maxY)
+void manualControlOverride(int maxX, int maxY)
 {
+
   XMotor.spin(forward);
   YMotor.spin(forward);
   while (!Controller.ButtonFDown.pressing())
   {
-    if (XCalOptical.color() != black)
-    {
-      XMotor.setVelocity(Controller.AxisB.position(), percent);
-    }
-    else
+    if (XCalDistance.objectDistance(mm) == 0 && Controller.AxisB.position() <= 0)
     {
       XMotor.setVelocity(0, percent);
     }
-    YMotor.setVelocity(Controller.AxisA.position(), percent);
+    else
+    {
+      XMotor.setVelocity(Controller.AxisB.position(), percent);
+    }
+    if (YCalSwitch.pressing() && Controller.AxisA.position() <= 0)
+    {
+      YMotor.setVelocity(0, percent);
+    }
+    else
+    {
+      YMotor.setVelocity(Controller.AxisA.position(), percent);
+    }
   }
   XMotor.stop(brake);
-  YMotor.stop(brake); //TEST
+  YMotor.stop(brake);
 }
 
 int main() {
@@ -512,6 +474,15 @@ int main() {
   MMotor.setPosition(0, degrees);
 
   // Begin project code
+
+  /*while(true)
+  {
+    Brain.Screen.print("%f",XCalDistance.objectDistance(mm));
+    wait(100, msec);
+    Brain.Screen.clearLine();
+    
+  }*/
+  manualControlOverride(100000, 100000);
 
   Mover m;
 
@@ -525,6 +496,4 @@ int main() {
   }
 
   Brain.programStop();
-
-  //newtest comment
 }
