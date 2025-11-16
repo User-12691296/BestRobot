@@ -123,10 +123,10 @@ class Mover {
     const float Y_MAX = 8.5*25.4;
     const float M_MAX = 20.0;
   
-    int getXAPos () {
+    float getXAPos () {
       return X_MM_PER_DEG*XMotor.position(degrees);
     }
-    int getYAPos() {
+    float getYAPos() {
       return Y_MM_PER_DEG*YMotor.position(degrees);
     }
     int getMAPos() {
@@ -165,13 +165,17 @@ class Mover {
       }
     }
     bool updateXSpeed() {
+      // Check lower bound (at origin, position = 0)
       if (DXSpeed < 0 && getXAPos()<=X_MIN) {
         // Below lower bound
         pauseXMotor();
+        return false;
       }
+      // Check upper bound
       if (DXSpeed > 0 && getXAPos()>=X_MAX) {
         // Above upper bound
         pauseXMotor();
+        return false;
       }
       if (DXSpeed != UXSpeed) {
         setXASpeed(DXSpeed);
@@ -188,13 +192,17 @@ class Mover {
       }
     }
     bool updateYSpeed() {
+      // Check lower bound (at origin, position = 0)
       if (DYSpeed < 0 && getYAPos()<=Y_MIN) {
         // Below lower bound
         pauseYMotor();
+        return false;
       }
+      // Check upper bound
       if (DYSpeed > 0 && getYAPos()>=Y_MAX) {
         // Above upper bound
         pauseYMotor();
+        return false;
       }
       if (DYSpeed != UYSpeed) {
         setYASpeed(DYSpeed);
@@ -388,12 +396,12 @@ void calibrateAllAxes()
     while (YCalSwitch.pressing()) 
     {
     }
-    wait(2000,msec);//move a little further 
     YMotor.stop(brake);
+    wait(200,msec);//pause to settle
 
     //move slowly toards sernsor unitl pressed
 
-    YMotor.setVelocity(APPROACH_SPEED, percent);
+    YMotor.setVelocity(APPROACH_SPEED*3, percent);
     YMotor.spin(reverse);
     while (!YCalSwitch.pressing()) 
     {
@@ -423,6 +431,8 @@ void calibrateAllAxes()
       while (XCalDistance.objectDistance(mm) < 60) 
       {
       }
+      XMotor.stop(brake);
+      wait(200, msec); //pause to settle
 
       //mmove slowly towards sensor until 
       XMotor.setVelocity(APPROACH_SPEED*2, percent);
@@ -443,33 +453,87 @@ void calibrateAllAxes()
 
 void manualControlOverride()
 {
-
-  XMotor.spin(forward);
-  YMotor.spin(forward);
   bool markerDown = false;
   bool markerInProgress = false;
+  bool xSpinningForward = true;
+  bool ySpinningForward = true;
+  
   while (!Controller.ButtonFDown.pressing())
   {
     //moves along the x-axis
-    if ((XMotor.position(degrees) >= 0 && Controller.AxisB.position() <= 0) || (XMotor.position(degrees) <= MAX_DEGREES_X/2 && Controller.AxisB.position() >= 0))
+    double xPos = XMotor.position(degrees);
+    int xAxisInput = Controller.AxisB.position();
+    
+    // Check boundaries: stop if at limit and trying to go further
+    if ((xPos >= 0 && xAxisInput < 0) || (xPos <= MAX_DEGREES_X && xAxisInput > 0))
     {
-      //stops moving if it reaches the boundary and tries to go further
-      XMotor.setVelocity(0, percent);
+      // At boundary and trying to go further - stop motor completely
+      XMotor.stop(brake);
+    }
+    else if (xAxisInput > 0)
+    {
+      // Moving away from origin (forward direction)
+      if (!xSpinningForward)
+      {
+        XMotor.stop();
+        xSpinningForward = true;
+      }
+      XMotor.setVelocity(xAxisInput/3, percent);
+      XMotor.spin(forward);
+    }
+    else if (xAxisInput < 0)
+    {
+      // Moving towards origin (reverse direction)
+      if (xSpinningForward)
+      {
+        XMotor.stop();
+        xSpinningForward = false;
+      }
+      XMotor.setVelocity(-xAxisInput/3, percent);
+      XMotor.spin(reverse);
     }
     else
     {
-      XMotor.setVelocity(Controller.AxisB.position()/3, percent);
+      // No input - stop
+      XMotor.stop(brake);
     }
 
     //moves along the y-axis
-    if ((YMotor.position(degrees) >= 0 && Controller.AxisA.position() <= 0) || (YMotor.position(degrees) <= MAX_DEGREES_Y/2 && Controller.AxisA.position() >= 0))
+    double yPos = YMotor.position(degrees);
+    int yAxisInput = Controller.AxisA.position();
+    
+    // Check boundaries: stop if at limit and trying to go further
+    if ((yPos >= 0 && yAxisInput < 0) || (yPos <= MAX_DEGREES_Y && yAxisInput > 0))
     {
-      //stops moving if it reaches the boundary and tries to go further
-      YMotor.setVelocity(0, percent);
+      // At boundary and trying to go further - stop motor completely
+      YMotor.stop(brake);
+    }
+    else if (yAxisInput > 0)
+    {
+      // Moving away from origin (forward direction)
+      if (!ySpinningForward)
+      {
+        YMotor.stop();
+        ySpinningForward = true;
+      }
+      YMotor.setVelocity(yAxisInput, percent);
+      YMotor.spin(forward);
+    }
+    else if (yAxisInput < 0)
+    {
+      // Moving towards origin (reverse direction)
+      if (ySpinningForward)
+      {
+        YMotor.stop();
+        ySpinningForward = false;
+      }
+      YMotor.setVelocity(-yAxisInput, percent);
+      YMotor.spin(reverse);
     }
     else
     {
-      YMotor.setVelocity(Controller.AxisA.position(), percent);
+      // No input - stop
+      YMotor.stop(brake);
     }
     //moves marker down if pressed and marker not already down
     if (Controller.ButtonRDown.pressing() && markerDown == false && markerInProgress == false)
@@ -493,8 +557,10 @@ void manualControlOverride()
       MMotor.stop(brake);
       markerInProgress = false;
     }
-    Brain.Screen.print("X: %d Y: %d", XMotor.position(degrees), YMotor.position(degrees));
+    // Display coordinates in degrees (using positions already read above)
+    Brain.Screen.setCursor(1, 1);
     Brain.Screen.clearLine();
+    Brain.Screen.print("X: %.1f  Y: %.1f  AxisB: %d  AxisA: %d", xPos, yPos, xAxisInput, yAxisInput);
 
   }
   XMotor.stop(brake);
