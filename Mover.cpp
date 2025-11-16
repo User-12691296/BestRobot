@@ -418,27 +418,42 @@ class Mover {
 void calibrateYaxis()
 {
   const int SAMPLES = 3;
-  Const double APPROCH_SPEED = 10.0; //towards sensor
+  const double APPROACH_SPEED = 10.0; //towards sensor
   const double RETRACT_SPEED = 20; //away from sensor
 
-  double samples[samples];
 
-  for (int i = 0; i < samples; i++) //move away until not prressed
+  double samples[SAMPLES];
+
+  for (int i = 0; i < SAMPLES; i++) //move away until not prressed
   {
     YMotor.setVelocity(RETRACT_SPEED, percent);
-    YMotor.spin(forward);
-    while (!YCalSwitch.pressing())
-    {}
+    YMotor.spin(reverse);
     while (YCalSwitch.pressing()) 
     {
-    wait(10,msec)  
     }
-    YMotor.stop(brake)
+    wait(2000,msec);//move a little further 
+    YMotor.stop(brake);
 
+    //move slowly toards sernsor unitl pressed
 
+    YMotor.setVelocity(APPROACH_SPEED, percent);
+    YMotor.spin(forward);
+    while (!YCalSwitch.pressing()) 
+    {
+    }
+    YMotor.stop(brake);
+    //records position
+    samples[i] = YMotor.position(degrees);
+    
+
+    //pause to settle 
+    wait(200,msec);
   }
-
-
+  //average contact position calculation
+  double avgDeg = samples[0] + samples[1] + samples[2] / SAMPLES;
+  //shift encoder so the positon becomes 0
+  double currentDeg = YMotor.position(degrees);
+  YMotor.setPosition(currentDeg - avgDeg, degrees);
 }
 
 void manualControlOverride(float maxX, float maxY)
