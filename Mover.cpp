@@ -415,16 +415,16 @@ class Mover {
     }
 };
 
-void calibrateYaxis()
+void calibrateAllAxes()
 {
   const int SAMPLES = 3;
   const double APPROACH_SPEED = 10.0; //towards sensor
   const double RETRACT_SPEED = 20; //away from sensor
 
 
-  double samples[SAMPLES];
+  double samplesY[SAMPLES];
 
-  for (int i = 0; i < SAMPLES; i++) //move away until not prressed
+  for (int i = 0; i < SAMPLES; i++) //move away until not pressed
   {
     YMotor.setVelocity(RETRACT_SPEED, percent);
     YMotor.spin(reverse);
@@ -444,16 +444,44 @@ void calibrateYaxis()
     YMotor.stop(brake);
     //records position
     samples[i] = YMotor.position(degrees);
-    
 
     //pause to settle 
-    wait(200,msec);
+    wait(2000,msec);
+
+    //calibrate x axis
   }
   //average contact position calculation
   double avgDeg = samples[0] + samples[1] + samples[2] / SAMPLES;
   //shift encoder so the positon becomes 0
   double currentDeg = YMotor.position(degrees);
   YMotor.setPosition(currentDeg - avgDeg, degrees);
+
+    //x axis calibration
+    double samplesX[SAMPLES];
+
+    for (int i = 0; i < SAMPLES; i++) //move away until not pressed
+    {
+      XMotor.setVelocity(RETRACT_SPEED, percent);
+      XMotor.spin(reverse);
+      while (XCalDistance.objectDistance(mm) < 50) 
+      {
+      }
+
+      //mmove slowly towards sensor until 
+      XMotor.setVelocity(APPROACH_SPEED, percent);
+      XMotor.spin(forward);
+      while (XCalDistance.objectDistance(mm) > 10) 
+      {
+      }
+      XMotor.stop(brake);
+      //records position
+      samplesX[i] = XMotor.position(degrees);
+    }
+
+    //average contact position calculation
+    double avgDegX = samplesX[0] + samplesX[1] + samplesX[2] / SAMPLES;
+    double currentDegX = XMotor.position(degrees);
+    XMotor.setPosition(currentDegX - avgDegX, degrees);
 }
 
 void manualControlOverride(float maxX, float maxY)
