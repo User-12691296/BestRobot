@@ -405,8 +405,8 @@ void calibrateAllAxes()
     //calibrate x axis
   }
   //average contact position calculation
-  double avgDeg = samples[0] + samples[1] + samples[2] / SAMPLES;
-  //shift encoder so the positon becomes 0
+  double avgDeg = (samples[0] + samples[1] + samples[2]) / SAMPLES;
+  //shift encoder so the position becomes 0
   double currentDeg = YMotor.position(degrees);
   YMotor.setPosition(currentDeg - avgDeg, degrees);
 
