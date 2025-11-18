@@ -88,6 +88,8 @@ const int MAX_DEGREES_Y = 500;
 
 void calibrateAllAxes();
 void moveTo(float x, float y);
+void markerDown();
+void markerUp();
 void manualControlOverride();
 void markerSwitch();
 void drawMenu(int selectedOption);
@@ -531,6 +533,22 @@ void moveTo(float x, float y)
   }
 }
 
+void markerDown()
+{
+  MMotor.setMaxTorque(5, percent);
+  MMotor.setVelocity(100, percent);
+  MMotor.spin(forward);
+}
+
+void markerUp()
+{
+  MMotor.setMaxTorque(100, percent)
+  MMotor.setvelocity(100, percent)
+  MMotor.spin(reverse);
+  wait(200, msec);
+  MMotor.stop(brake);
+}
+
 void manualControlOverride()
 {
   bool markerDown = true;
@@ -622,7 +640,7 @@ void manualControlOverride()
       markerInProgress = true;
       markerDown = true;
       // Set low torque for constant gentle pressure
-      MMotor.setMaxTorque(10, percent);
+      MMotor.setMaxTorque(5, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(forward);
       markerInProgress = false;
@@ -646,7 +664,7 @@ void manualControlOverride()
     // Keep marker pressing down with low torque when in down position
     if (markerDown && !markerInProgress)
     {
-      MMotor.setMaxTorque(10, percent);
+      MMotor.setMaxTorque(5, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(forward);
     }
