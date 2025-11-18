@@ -83,6 +83,9 @@ using namespace vex;
 const int MAX_DEGREES_X = 500;
 const int MAX_DEGREES_Y = 500;
 
+// presents a color on touch led based on a certain state of robot
+void KeepUserInformed(char C);
+
 class Mover {
   private:
     bool XTargetSet, YTargetSet, MTargetSet;
@@ -735,6 +738,68 @@ int mainMenu ()
   
   return selectedOption;
 }
+
+// presents a color on touch led based on a certain state of robot
+void keepUserInformed(char C)
+{
+  // while homing all axies
+  if (C == 'H')
+  {
+    TouchLED.setColor(yellow);
+  }
+
+  // startup done and completed
+  else if (C == 'S')
+  {
+    TouchLED.setColor(green);
+  }
+
+  // autodraw
+  else if (C == 'A')
+  {
+    TouchLED.setColor(orange);
+  }
+
+  // controller
+  else if (C == 'C')
+  {
+    TouchLED.setColor(blue);
+  }
+
+  // marker switcher
+  else if (C == 'M')
+  {
+    TouchLED.setColor(purple);
+  }
+
+  // limit triggered unexpectedly 
+  else if (C == 'T')
+  {
+    // use return to main menu function
+  }
+
+  // paper is removed
+  else if (C == 'R')
+  {
+    TouchLED.setColor(red);
+    while (!TouchLED.pressing())
+    {
+      wait(0.5, seconds);
+      TouchLED.setFade(fast);
+      wait(0.5, seconds);
+      TouchLED.setBrightness(100);
+    }
+    TouchLED.off(); 
+  }
+
+  // shutdown procedure
+  else if (C == 'P')
+  {
+    TouchLED.setColor(red);
+  }
+
+} 
+
 int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -745,12 +810,12 @@ int main() {
   // Begin project code
   
   // Initial calibration
-  calibrateAllAxes();
+  //calibrateAllAxes();
   
   // Main menu loop
   while (true) {
     int selection = mainMenu();
-    
+
     switch (selection) {
       case 0: // Manual Control
         //Brain.Screen.clearScreen();
@@ -764,6 +829,7 @@ int main() {
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Automator Mode");
+        keepUserInformed('A');
         Brain.Screen.setCursor(2, 1);
         Brain.Screen.print("Not implemented yet");
         wait(2, seconds);
@@ -773,6 +839,7 @@ int main() {
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Starting Marker Switch");
+        keepUserInformed('M');
         wait(500, msec);
         markerSwitch();
         break;
@@ -791,6 +858,7 @@ int main() {
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Shutting down...");
+        keepUserInformed('P');
         wait(1, seconds);
         Brain.programStop();
         return 0;
