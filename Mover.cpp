@@ -80,11 +80,21 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const float GEAR_RATIO_X = 2.25;
+const float GEAR_RATIO_X = 5.5;
 const float GEAR_RATIO_Y = 6;
 
 const int MAX_DEGREES_X = 500;
 const int MAX_DEGREES_Y = 500;
+
+void calibrateAllAxes();
+void moveTo(float x, float y);
+void manualControlOverride();
+void markerSwitch();
+void drawMenu(int selectedOption);
+void penPressure(bool applyPressure);
+void keepUserInformed(char C);
+int mainMenu();
+
 
 // presents a color on touch led based on a certain state of robot
 void KeepUserInformed(char C);
@@ -469,9 +479,14 @@ void moveTo(float x, float y)
   float yLocation = -1;
   float xDistanceOff = -1;
   float yDistanceOff = -1;
+  bool xReached = false;
+  bool yReached = false;
+
   XMotor.setVelocity(10, percent);
   YMotor.setVelocity(25, percent);
-  while(xLocation != x || yLocation != y)
+  penPressure(true);
+
+  while(xReached == false || yReached == false)
   {
 
     xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
@@ -497,6 +512,7 @@ void moveTo(float x, float y)
     else if (xDistanceOff <= 1)
     {
       XMotor.stop(brake);
+      xReached = true;
     }
 
     if (yLocation < y && yDistanceOff > 1)
@@ -510,6 +526,7 @@ void moveTo(float x, float y)
     else if (yDistanceOff <= 1)
     {
       YMotor.stop(brake);
+      yReached = true;
     }
   }
 }
@@ -798,7 +815,7 @@ int mainMenu ()
 void penPressure(bool applyPressure)
 {
   if (applyPressure == true) {
-      MMotor.setMaxTorque(10, percent);
+      MMotor.setMaxTorque(5, percent);
       MMotor.setVelocity(20, percent);
       MMotor.spin(forward);
   }
@@ -896,7 +913,10 @@ int main() {
         
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        moveTo(500, 500);
+        moveTo(0, 400);
+        moveTo(400, 400);
+        moveTo(400, 0);
+        moveTo(0,0);
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Automator Mode");
         keepUserInformed('A');
