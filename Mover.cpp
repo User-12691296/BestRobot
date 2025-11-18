@@ -542,8 +542,8 @@ void markerDown()
 
 void markerUp()
 {
-  MMotor.setMaxTorque(100, percent)
-  MMotor.setvelocity(100, percent)
+  MMotor.setMaxTorque(100, percent);
+  MMotor.setVelocity(100, percent);
   MMotor.spin(reverse);
   wait(200, msec);
   MMotor.stop(brake);
