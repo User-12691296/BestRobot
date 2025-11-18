@@ -80,7 +80,7 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const float GEAR_RATIO_X = 5.5;
+const float GEAR_RATIO_X = 1.125;
 const float GEAR_RATIO_Y = 6;
 
 const int MAX_DEGREES_X = 500;
