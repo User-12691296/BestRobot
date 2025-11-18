@@ -80,6 +80,9 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
+const float GEAR_RATIO_X = 2.25;
+const float GEAR_RATIO_Y = 6;
+
 const int MAX_DEGREES_X = 500;
 const int MAX_DEGREES_Y = 500;
 
@@ -382,14 +385,16 @@ class Mover {
 
 void calibrateAllAxes()
 {
-  const int SAMPLES = 3;
+  const int XSAMPLES = 3;
+  const int YSAMPLES = 2;
+
   const double APPROACH_SPEED = 10.0; //towards sensor
   const double RETRACT_SPEED = 20; //away from sensor
 
 
-  double samplesY[SAMPLES];
+  double samplesY[YSAMPLES];
 
-  for (int i = 0; i < SAMPLES; i++) //move away until not pressed
+  for (int i = 0; i < YSAMPLES; i++) //move away until not pressed
   {
     YMotor.setVelocity(RETRACT_SPEED, percent);
     YMotor.spin(forward);
@@ -420,15 +425,15 @@ void calibrateAllAxes()
 
   }
   //average contact position calculation
-  double avgDeg = (samplesY[0] + samplesY[1] + samplesY[2]) / SAMPLES;
+  double avgDeg = (samplesY[0] + samplesY[1]) / YSAMPLES;
   //shift encoder so the position becomes 0
   double currentDeg = YMotor.position(degrees);
   YMotor.setPosition(currentDeg - avgDeg, degrees);
 
     //x axis calibration
-    double samplesX[SAMPLES];
+    double samplesX[XSAMPLES];
 
-    for (int i = 0; i < SAMPLES; i++) //move away until not pressed
+    for (int i = 0; i < XSAMPLES; i++) //move away until not pressed
     {
       XMotor.setVelocity(RETRACT_SPEED, percent);
       XMotor.spin(forward);
@@ -450,9 +455,60 @@ void calibrateAllAxes()
     }
 
     //average contact position calculation
-    double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / SAMPLES;
+    double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / XSAMPLES;
     double currentDegX = XMotor.position(degrees);
     XMotor.setPosition(currentDegX - avgDegX, degrees);
+}
+
+void moveTo(float x, float y)
+{
+  float xLocation = -1;
+  float yLocation = -1;
+  float xDistanceOff = -1;
+  float yDistanceOff = -1;
+  XMotor.setVelocity(10, percent);
+  YMotor.setVelocity(25, percent);
+  while(xLocation != x || yLocation != y)
+  {
+
+    xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
+    yLocation = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
+    xDistanceOff = abs(x - xLocation);
+    yDistanceOff = abs(y- yLocation);
+
+    Brain.Screen.setCursor(1,1);
+    Brain.Screen.clearLine(1);
+    Brain.Screen.print("X: %f", xLocation);
+    Brain.Screen.setCursor(2,1);
+    Brain.Screen.clearLine(2);
+    Brain.Screen.print("Y: %f", yLocation);
+
+    if (xLocation < x && xDistanceOff > 1)
+    {
+      XMotor.spin(forward);
+    }
+    else if (xLocation > x && xDistanceOff > 1)
+    {
+      XMotor.spin(reverse);
+    }
+    else if (xDistanceOff <= 1)
+    {
+      XMotor.stop(brake);
+    }
+
+    if (yLocation < y && yDistanceOff > 1)
+    {
+      YMotor.spin(forward);
+    }
+    else if (yLocation > y && yDistanceOff > 1)
+    {
+      YMotor.spin(reverse);
+    }
+    else if (yDistanceOff <= 1)
+    {
+      YMotor.stop(brake);
+    }
+  }
 }
 
 void manualControlOverride()
@@ -746,7 +802,6 @@ int main() {
   
   // Initial calibration
   calibrateAllAxes();
-  
   // Main menu loop
   while (true) {
     int selection = mainMenu();
@@ -762,6 +817,7 @@ int main() {
         
       case 1: // Automator
         //Brain.Screen.clearScreen();
+        moveTo(500, 500);
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Automator Mode");
         Brain.Screen.setCursor(2, 1);
