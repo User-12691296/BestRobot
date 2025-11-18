@@ -457,7 +457,7 @@ void calibrateAllAxes()
 
 void manualControlOverride()
 {
-  bool markerDown = false;
+  bool markerDown = true;
   bool markerInProgress = false;
   bool xSpinningForward = true;
   bool ySpinningForward = true;
@@ -469,7 +469,7 @@ void manualControlOverride()
     int xAxisInput = Controller.AxisB.position();
     
 
-    // Check boundaries: stop if at limit and trying to go further
+    //check boundaries: stop if at limit and trying to go further
     if ((xPos <= 0 && xAxisInput < 0) || (xPos >= MAX_DEGREES_X && xAxisInput > 0))
     {
       //at boundary and trying to go further will stop motor completely
@@ -556,9 +556,9 @@ void manualControlOverride()
     {
       markerInProgress = true;
       markerDown = false;
-      // Stop applying pressure and lift marker
+      //stop applying pressure and lift marker
       MMotor.stop(brake);
-      // Reset to full torque for lifting
+      //reset to full torque for lifting
       MMotor.setMaxTorque(100, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(reverse);
@@ -586,6 +586,53 @@ void manualControlOverride()
   }
   XMotor.stop(brake);
   YMotor.stop(brake);
+}
+
+void markerSwitch()
+{
+  //percent speed of the marker motors
+  const int MARKER_RETRACT_SPEED = 20;
+  const int MARKER_INSERTION_SPEED = 20;
+
+  //time in seconds the marker motors will spin for
+  const int MARKER_RETRACT_TIME = 2;
+  const int MARKER_INSERTION_TIME = 2; 
+    
+    MMotor.setVelocity(MARKER_RETRACT_SPEED, percent);
+    MMotor.spin(reverse);
+
+    Brain.Screen.clearLine(1);
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Removing Marker...");
+
+    wait(MARKER_RETRACT_TIME, seconds);
+    MMotor.stop(brake);
+
+    Brain.Screen.clearLine(1);
+    Brain.Screen.print("Marker ready to be inserted");
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print("Press TouchLED when inserted");
+
+    while(!TouchLED.pressing())
+    {
+    }
+
+    Brain.Screen.clearLine(1);
+    Brain.Screen.clearLine(2);
+
+    MMotor.setVelocity(MARKER_INSERTION_SPEED, percent);
+    MMotor.spin(forward);
+
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Inserting Marker...");
+
+    wait(MARKER_INSERTION_TIME, seconds);
+    MMotor.stop(brake);
+
+    Brain.Screen.clearLine(1);
+    Brain.Screen.print("Marker switch complete!");
+
+    wait(2, seconds);
 }
 
 void drawMenu(int selectedOption) {
@@ -739,15 +786,9 @@ int main() {
       case 2: // Switch Marker
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
-        Brain.Screen.print("Switch Marker");
-        Brain.Screen.setCursor(2, 1);
-        Brain.Screen.print("Move marker manually");
-        Brain.Screen.setCursor(3, 1);
-        Brain.Screen.print("Press TouchLED when done");
-        while (!TouchLED.pressing()) {
-          wait(50, msec);
-        }
-        wait(500, msec); // Debounce
+        Brain.Screen.print("Starting Marker Switch");
+        wait(500, msec);
+        markerSwitch();
         break;
         
       case 3: // Recalibration
