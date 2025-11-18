@@ -739,6 +739,20 @@ int mainMenu ()
   return selectedOption;
 }
 
+void penPressure(bool applyPressure)
+{
+  if (applyPressure == true) {
+      MMotor.setMaxTorque(10, percent);
+      MMotor.setVelocity(20, percent);
+      MMotor.spin(forward);
+  }
+  else {
+    MMotor.stop(brake);
+    MMotor.setMaxTorque(100, percent);
+    MMotor.setVelocity(50, percent);
+  }
+}
+
 // presents a color on touch led based on a certain state of robot
 void keepUserInformed(char C)
 {
