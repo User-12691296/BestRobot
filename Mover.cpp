@@ -430,6 +430,8 @@ void manualControlOverride()
   MMotor.stop(brake);
   if (markerDown)
     markerUp();
+  TouchLED.setFade(slow);
+
   calibrateAllAxes();
 }
 
@@ -843,6 +845,7 @@ int main() {
       case 1: // Automator
         TouchLED.setBlink(orange, 0.5, 0.5);
         //Brain.Screen.clearScreen();
+		
         automatedDrawing(CUBE, 12);
 
         //automatedDrawing(SEG_TEST, 3);
@@ -866,10 +869,9 @@ int main() {
         {
 
         }
-        while (!TouchLED.pressing())
-        {
-          keepUserInformed('S');
-        }
+        
+        keepUserInformed('S');
+
         break;
 
       case 3: // Recalibration
@@ -891,9 +893,12 @@ int main() {
         wait(1, seconds);
         TouchLED.setFade(slow);
         exitRobot();
+<<<<<<< HEAD
         running = false;
+=======
+        Brain.programStop();
+        return 0;
+>>>>>>> 71be78bf4dbc0f56d41102b53dac142598991a20
     }
   }
-
-  Brain.programStop();
 }
