@@ -80,7 +80,8 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-
+const float GEAR_RATIO_X = 17.23;
+const float GEAR_RATIO_Y = 60;
 
 const int MAX_DEGREES_X = 1000;
 const int MAX_DEGREES_Y = 500;
@@ -488,9 +489,6 @@ void moveTo(float x, float y)
 
   const int X_VELOCITY = 10;
   const int Y_VELOCITY = 20;
-
-  const float GEAR_RATIO_X = 1.723;
-  const float GEAR_RATIO_Y = 6;
 
   XMotor.setVelocity(X_VELOCITY, percent);
   YMotor.setVelocity(Y_VELOCITY, percent);
@@ -1004,7 +1002,7 @@ const float SEGMENTS_P1[][2][2] = {
 };
 
 const float AUTOMATED_TOLERANCE = 0.05;
-/*
+
 void automatedDrawing(const float segments[][2][2], const int segs) {
 	float xloc = 0; float yloc = 0;
 	
@@ -1015,12 +1013,10 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 		xloc = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
 		yloc = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
 		
-		segdata = segments[cseg];
-		
 		// If farther than 0.05 on either axis from the start of next line, pick up marker and move there
-		if (abs(xloc)-abs(segdata[0][0]) > AUTOMATED_TOLERANCE || abs(yloc)-abs(segdata[0][1]) > AUTOMATED_TOLERANCE) {
+		if (abs(xloc)-abs(segments[cseg][0][0]) > AUTOMATED_TOLERANCE || abs(yloc)-abs(segments[cseg][0][1]) > AUTOMATED_TOLERANCE) {
 			markerUp();
-			moveTo(segdata[0][0], segdata[0][1]);
+			moveTo(segments[cseg][0][0], segments[cseg][0][1]);
 			markerDown();
 			markerDownYet = true;
 		}
@@ -1029,10 +1025,10 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 			markerDown();
 			markerDownYet = true;
 		}
-		moveTo(segdata[1][0], segdata[1][1]);
+		moveTo(segments[cseg][1][0], segments[cseg][1][1]);
 	}
 }
-*/
+
 int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -1059,17 +1055,7 @@ int main() {
 
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        moveTo(0,0);
-        moveTo(0, 400);
-        moveTo(0, 400);
-        moveTo(400, 400);
-        moveTo(400, 0);
-        moveTo(0,0);
-        Brain.Screen.setCursor(1, 1);
-        Brain.Screen.print("Automator Mode");
-        keepUserInformed('A');
-        Brain.Screen.setCursor(2, 1);
-        Brain.Screen.print("Not implemented yet");
+        automatedDrawing(SEGMENTS_P1, 80);
         wait(2, seconds);
         break;
 
