@@ -1004,7 +1004,13 @@ const float SEGMENTS_P1[][2][2] = {
 	{{6.19655992078532, 5.219496430379168}, {6.000929054000031, 6.466564766510013}}
 };
 
-const float AUTOMATED_TOLERANCE = 0.05;
+const float SEG_TEST[][2][2] = {
+	{{0, 0}, {5, 0}},
+	{{5, 0}, {2.5, 4},
+	{{2.5, 4}, {0, 0}}
+}
+
+const float AUTOMATED_TOLERANCE = 0.02;
 
 void automatedDrawing(const float segments[][2][2], const int segs) {
 	float xloc = 0; float yloc = 0;
@@ -1058,7 +1064,7 @@ int main() {
 
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        automatedDrawing(SEGMENTS_P1, 80);
+        automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
         break;
 
