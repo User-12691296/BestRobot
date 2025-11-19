@@ -770,6 +770,27 @@ const float CUBE[][2][2] = {
   {{1, 4}, {2, 5}}       // top-left
 };
 
+const float BAD_CUBE[][2][2] = {
+  // Front face (bottom square)
+  {{1, 1}, {4, 1}},      // bottom edge
+  {{4, 1}, {4, 4}},      // right edge
+  {{4, 4}, {0.2, 4}},      // top edge
+  {{0.2, 4}, {0.2, 0.5}},      // left edge
+ 
+  // Back face
+  {{2, 2}, {5, 2}},      // bottom edge
+  {{5, 2}, {5, 5}},      // right edge
+  {{5, 5}, {1.2, 5}},      // top edge
+  {{1.2, 5}, {1.2, 1.5}},      // left edge
+ 
+  // Connecting edges (front to back)
+  {{0.2, 0.5}, {1.2, 1.5}},      // bottom-left
+  {{4, 1}, {5, 2}},      // bottom-right
+  {{3.2, 3.5}, {5, 5}},      // top-right
+  {{0.2, 3.5}, {2.8, 5}}       // top-left
+};
+
+
 const float AUTOMATED_TOLERANCE = 0.05;
 
 void automatedDrawing(const float segments[][2][2], const int segs) {
@@ -846,7 +867,7 @@ int main() {
         TouchLED.setBlink(orange, 0.5, 0.5);
         //Brain.Screen.clearScreen();
 		
-        automatedDrawing(CUBE, 12);
+        automatedDrawing(BAD_CUBE, 12);
 
         //automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
