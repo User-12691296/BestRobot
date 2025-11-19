@@ -505,6 +505,92 @@ void calibrateAllAxes()
     XMotor.setPosition(currentDegX - avgDegX, degrees);
 }
 
+void moveTo(float x, float y)
+{
+  float xLocation = -1;
+  float yLocation = -1;
+
+  float xDistanceOff = -1;
+  float yDistanceOff = -1;
+  const float ERROR_MARGIN = 0.5;
+
+  bool xReached = false;
+  bool yReached = false;
+
+  const int X_VELOCITY = 10;
+  const int Y_VELOCITY = 20;
+
+  const float GEAR_RATIO_X = 1.723;
+  const float GEAR_RATIO_Y = 6;
+
+  XMotor.setVelocity(X_VELOCITY, percent);
+  YMotor.setVelocity(Y_VELOCITY, percent);
+  penPressure(true);
+
+  XMotor.spin(forward);
+  YMotor.spin(forward);
+
+  while(xReached == false || yReached == false)
+  {
+
+    xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
+    yLocation = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
+    xDistanceOff = abs(x - xLocation);
+    yDistanceOff = abs(y- yLocation);
+
+    Brain.Screen.setCursor(1,1);
+    Brain.Screen.clearLine(1);
+    Brain.Screen.print("X: %f", xLocation);
+    Brain.Screen.setCursor(2,1);
+    Brain.Screen.clearLine(2);
+    Brain.Screen.print("Y: %f", yLocation);
+
+    if (xLocation < x && xDistanceOff > ERROR_MARGIN)
+    {
+      XMotor.setVelocity(X_VELOCITY, percent);
+    }
+    else if (xLocation > x && xDistanceOff > ERROR_MARGIN)
+    {
+      XMotor.setVelocity(-X_VELOCITY, percent);
+    }
+    else if (xDistanceOff <= ERROR_MARGIN)
+    {
+      XMotor.stop(brake);
+      xReached = true;
+    }
+
+    if (yLocation < y && yDistanceOff > ERROR_MARGIN)
+    {
+      YMotor.setVelocity(Y_VELOCITY, percent);
+    }
+    else if (yLocation > y && yDistanceOff > ERROR_MARGIN)
+    {
+      YMotor.setVelocity(-Y_VELOCITY, percent);
+    }
+    else if (yDistanceOff <= ERROR_MARGIN)
+    {
+      YMotor.stop(brake);
+      yReached = true;
+    }
+  }
+}
+
+void markerDown()
+{
+  MMotor.setMaxTorque(5, percent);
+  MMotor.setVelocity(100, percent);
+  MMotor.spin(forward);
+}
+
+void markerUp()
+{
+  MMotor.setMaxTorque(100, percent);
+  MMotor.setVelocity(100, percent);
+  MMotor.spin(reverse);
+  wait(200, msec);
+  MMotor.stop(brake);
+}
+
 void manualControlOverride()
 {
   bool markerDown = true;
@@ -637,6 +723,7 @@ void manualControlOverride()
   }
   XMotor.stop(brake);
   YMotor.stop(brake);
+  MMotor.stop(brake);
 }
 
 void markerSwitch()
