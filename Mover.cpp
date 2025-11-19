@@ -80,8 +80,8 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const float GEAR_RATIO_X = 17.23;
-const float GEAR_RATIO_Y = 60;
+const float GEAR_RATIO_X = 137.84;
+const float GEAR_RATIO_Y = 480;
 
 const int MAX_DEGREES_X = 1000;
 const int MAX_DEGREES_Y = 500;
@@ -486,7 +486,7 @@ void moveTo(float x, float y)
 
   float xDistanceOff = -1;
   float yDistanceOff = -1;
-  const float ERROR_MARGIN = 0.5;
+  const float ERROR_MARGIN = 0.1;
 
   bool xReached = false;
   bool yReached = false;
@@ -496,7 +496,6 @@ void moveTo(float x, float y)
 
   XMotor.setVelocity(X_VELOCITY, percent);
   YMotor.setVelocity(Y_VELOCITY, percent);
-  penPressure(true);
 
   XMotor.spin(forward);
   YMotor.spin(forward);
