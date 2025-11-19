@@ -839,9 +839,10 @@ int main() {
 
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        //automatedDrawing(CUBE, 12);
 
-		TouchLED.setBlink(orange, 0.5, 0.5);
+        TouchLED.setBlink(orange, 0.5, 0.5);
+        
+        //automatedDrawing(CUBE, 12);
 
         markerUp();
         moveTo(0, 0);
