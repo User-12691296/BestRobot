@@ -492,7 +492,7 @@ void moveTo(float x, float y)
   bool yReached = false;
 
   const int X_VELOCITY = 10;
-  const int Y_VELOCITY = 20;
+  const int Y_VELOCITY = 35;
 
   XMotor.setVelocity(X_VELOCITY, percent);
   YMotor.setVelocity(Y_VELOCITY, percent);
