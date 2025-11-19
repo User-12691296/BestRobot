@@ -278,8 +278,8 @@ void moveTo(float x, float y)
 
 void markerDown()
 {
-  MMotor.setMaxTorque(10, percent);
-  MMotor.setVelocity(10, percent);
+  MMotor.setMaxTorque(60, percent);
+  MMotor.setVelocity(40, percent);
   MMotor.spin(forward);
   wait(800, msec);
   MMotor.stop();
@@ -288,9 +288,9 @@ void markerDown()
 void markerUp()
 {
   MMotor.setMaxTorque(100, percent);
-  MMotor.setVelocity(10, percent);
+  MMotor.setVelocity(20, percent);
   MMotor.spin(reverse);
-  wait(100, msec);
+  wait(800, msec);
   MMotor.stop(brake);
 }
 
@@ -633,26 +633,6 @@ void keepUserInformed(char C)
     TouchLED.setColor(purple);
   }
 
-  // limit triggered unexpectedly
-  else if (C == 'T')
-  {
-    // use return to main menu function
-  }
-
-  // paper is removed
-  else if (C == 'R')
-  {
-    TouchLED.setColor(red);
-    while (!TouchLED.pressing())
-    {
-      wait(0.5, seconds);
-      TouchLED.setFade(fast);
-      wait(0.5, seconds);
-      TouchLED.setBrightness(100);
-    }
-    TouchLED.off();
-  }
-
   // shutdown procedure
   else if (C == 'P')
   {
@@ -894,7 +874,6 @@ int main() {
         TouchLED.setFade(slow);
         exitRobot();
         running = false;
-        Brain.programStop();
     }
   }
 }
