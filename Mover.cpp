@@ -48,7 +48,7 @@ void initializeRandomSeed(){
     xAxis + yAxis + zAxis
   );
   // Set the seed
-  srand(seed);
+  srand(seed); 
 }
 
 
@@ -56,7 +56,7 @@ void initializeRandomSeed(){
 void vexcodeInit() {
 
   // Initializing random seed.
-  initializeRandomSeed();
+  initializeRandomSeed(); 
 }
 
 
@@ -66,12 +66,12 @@ bool RemoteControlCodeEnabled = true;
 #pragma endregion VEXcode Generated Robot Configuration
 
 //----------------------------------------------------------------------------
-//
-//    Module:       main.cpp
-//    Author:       {author}
-//    Created:      {date}
-//    Description:  IQ project
-//
+//                                                                            
+//    Module:       main.cpp                                                  
+//    Author:       {author}                                                  
+//    Created:      {date}                                                    
+//    Description:  IQ project                                                
+//                                                                            
 //----------------------------------------------------------------------------
 
 // Include the IQ Library
@@ -80,23 +80,8 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const float GEAR_RATIO_X = 0.632;
-const float GEAR_RATIO_Y = 6;
-
 const int MAX_DEGREES_X = 500;
 const int MAX_DEGREES_Y = 500;
-
-void calibrateAllAxes();
-void moveTo(float x, float y);
-void markerDown();
-void markerUp();
-void manualControlOverride();
-void markerSwitch();
-void drawMenu(int selectedOption);
-void penPressure(bool applyPressure);
-void keepUserInformed(char C);
-int mainMenu();
-
 
 // presents a color on touch led based on a certain state of robot
 void KeepUserInformed(char C);
@@ -140,7 +125,7 @@ class Mover {
     const float X_MAX = 11.0*25.4;
     const float Y_MAX = 8.5*25.4;
     const float M_MAX = 20.0;
-
+  
     float getXAPos () {
       return X_MM_PER_DEG*XMotor.position(degrees);
     }
@@ -264,13 +249,13 @@ class Mover {
         }
       }
     }
-
+  
   public:
     Mover() {
       XTargetSet = false;
       YTargetSet = false;
       MTargetSet = false;
-
+      
       // In mm
       XTarget = 0.0;
       YTarget = 0.0;
@@ -384,7 +369,7 @@ class Mover {
       else {
         // Target processing
         ifXTargetSetPIDControl();
-
+        
         // Speed updating
         if (updateXSpeed() || updateYSpeed() || updateMSpeed()) {
           // Moved successfully
@@ -398,22 +383,67 @@ class Mover {
     }
 };
 
+// presents a color on touch led based on a certain state of robot
+void keepUserInformed(char C)
+{
+  // while homing all axies
+  if (C == 'H')
+  {
+    TouchLED.setColor(yellow);
+  }
+
+  // startup done and completed
+  else if (C == 'S')
+  {
+    TouchLED.setColor(green);
+  }
+
+  // autodraw
+  else if (C == 'A')
+  {
+    TouchLED.setColor(orange);
+  }
+
+  // controller
+  else if (C == 'C')
+  {
+    TouchLED.setColor(blue);
+  }
+
+  // marker switcher
+  else if (C == 'M')
+  {
+    TouchLED.setColor(purple);
+  }
+
+  // shutdown procedure
+  else if (C == 'P')
+  {
+    TouchLED.setColor(red);
+  }
+
+  else if (C == 'O')
+  {
+    TouchLED.off();
+  }
+
+} 
+
 void calibrateAllAxes()
 {
-  const int XSAMPLES = 3;
-  const int YSAMPLES = 2;
-
+  const int SAMPLES = 3;
   const double APPROACH_SPEED = 10.0; //towards sensor
   const double RETRACT_SPEED = 20; //away from sensor
 
+  double samplesY[SAMPLES];
 
-  double samplesY[YSAMPLES];
+  TouchLED.setBlink(yellow, 0.5, 0.5);
 
-  for (int i = 0; i < YSAMPLES; i++) //move away until not pressed
+  for (int i = 0; i < SAMPLES; i++) //move away until not pressed
   {
     YMotor.setVelocity(RETRACT_SPEED, percent);
     YMotor.spin(forward);
-    while (YCalSwitch.pressing())
+    while (YCalSwitch.pressing()) 
     {
     }
     YMotor.stop(brake);
@@ -423,16 +453,16 @@ void calibrateAllAxes()
 
     YMotor.setVelocity(APPROACH_SPEED*3, percent);
     YMotor.spin(reverse);
-    while (!YCalSwitch.pressing())
+    while (!YCalSwitch.pressing()) 
     {
     }
     YMotor.stop(brake);
     //records position
     samplesY[i] = YMotor.position(degrees);
 
-    //pause to settle
+    //pause to settle 
     wait(2000,msec);
-    //move backwards more
+    //move backwards more 
     YMotor.setVelocity(RETRACT_SPEED*2, percent);
     YMotor.spin(forward);
     wait(3000, msec);
@@ -440,28 +470,28 @@ void calibrateAllAxes()
 
   }
   //average contact position calculation
-  double avgDeg = (samplesY[0] + samplesY[1]) / YSAMPLES;
+  double avgDeg = (samplesY[0] + samplesY[1] + samplesY[2]) / SAMPLES;
   //shift encoder so the position becomes 0
   double currentDeg = YMotor.position(degrees);
   YMotor.setPosition(currentDeg - avgDeg, degrees);
 
     //x axis calibration
-    double samplesX[XSAMPLES];
+    double samplesX[SAMPLES];
 
-    for (int i = 0; i < XSAMPLES; i++) //move away until not pressed
+    for (int i = 0; i < SAMPLES; i++) //move away until not pressed
     {
       XMotor.setVelocity(RETRACT_SPEED, percent);
       XMotor.spin(forward);
-      while (XCalDistance.objectDistance(mm) < 60)
+      while (XCalDistance.objectDistance(mm) < 60) 
       {
       }
       XMotor.stop(brake);
       wait(200, msec); //pause to settle
 
-      //mmove slowly towards sensor until
+      //mmove slowly towards sensor until 
       XMotor.setVelocity(APPROACH_SPEED*2, percent);
       XMotor.spin(reverse);
-      while (XCalDistance.objectDistance(mm) > 40)
+      while (XCalDistance.objectDistance(mm) > 40) 
       {
       }
       XMotor.stop(brake);
@@ -470,92 +500,9 @@ void calibrateAllAxes()
     }
 
     //average contact position calculation
-    double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / XSAMPLES;
+    double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / SAMPLES;
     double currentDegX = XMotor.position(degrees);
     XMotor.setPosition(currentDegX - avgDegX, degrees);
-}
-
-void moveTo(float x, float y)
-{
-  float xLocation = -1;
-  float yLocation = -1;
-
-  float xDistanceOff = -1;
-  float yDistanceOff = -1;
-  const float ERROR_MARGIN = 0.5;
-
-  bool xReached = false;
-  bool yReached = false;
-
-  const int X_VELOCITY = 10;
-  const int Y_VELOCITY = 10;
-
-  XMotor.setVelocity(X_VELOCITY, percent);
-  YMotor.setVelocity(Y_VELOCITY, percent);
-  penPressure(true);
-
-  XMotor.spin(forward);
-  YMotor.spin(forward);
-
-  while(xReached == false || yReached == false)
-  {
-
-    xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
-    yLocation = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
-    xDistanceOff = abs(x - xLocation);
-    yDistanceOff = abs(y- yLocation);
-
-    Brain.Screen.setCursor(1,1);
-    Brain.Screen.clearLine(1);
-    Brain.Screen.print("X: %f", xLocation);
-    Brain.Screen.setCursor(2,1);
-    Brain.Screen.clearLine(2);
-    Brain.Screen.print("Y: %f", yLocation);
-
-    if (xLocation < x && xDistanceOff > ERROR_MARGIN)
-    {
-      XMotor.setVelocity(X_VELOCITY, percent);
-    }
-    else if (xLocation > x && xDistanceOff > ERROR_MARGIN)
-    {
-      XMotor.setVelocity(-X_VELOCITY, percent);
-    }
-    else if (xDistanceOff <= ERROR_MARGIN)
-    {
-      XMotor.stop(brake);
-      xReached = true;
-    }
-
-    if (yLocation < y && yDistanceOff > ERROR_MARGIN)
-    {
-      YMotor.setVelocity(Y_VELOCITY, percent);
-    }
-    else if (yLocation > y && yDistanceOff > ERROR_MARGIN)
-    {
-      YMotor.setVelocity(-Y_VELOCITY, percent);
-    }
-    else if (yDistanceOff <= ERROR_MARGIN)
-    {
-      YMotor.stop(brake);
-      yReached = true;
-    }
-  }
-}
-
-void markerDown()
-{
-  MMotor.setMaxTorque(5, percent);
-  MMotor.setVelocity(100, percent);
-  MMotor.spin(forward);
-}
-
-void markerUp()
-{
-  MMotor.setMaxTorque(100, percent);
-  MMotor.setVelocity(100, percent);
-  MMotor.spin(reverse);
-  wait(200, msec);
-  MMotor.stop(brake);
 }
 
 void manualControlOverride()
@@ -564,13 +511,14 @@ void manualControlOverride()
   bool markerInProgress = false;
   bool xSpinningForward = true;
   bool ySpinningForward = true;
-
+  
   while (!Controller.ButtonFDown.pressing())
   {
+    TouchLED.setBlink(blue, 0.5, 0.5);
     //moves along the x-axis
     double xPos = XMotor.position(degrees);
     int xAxisInput = Controller.AxisB.position();
-
+    
 
     //check boundaries: stop if at limit and trying to go further
     if ((xPos <= 0 && xAxisInput < 0) || (xPos >= MAX_DEGREES_X && xAxisInput > 0))
@@ -609,7 +557,7 @@ void manualControlOverride()
     //moves along the y-axis
     double yPos = YMotor.position(degrees);
     int yAxisInput = Controller.AxisA.position();
-
+    
     // Check boundaries: stop if at limit and trying to go further
     if ((yPos <= 0 && yAxisInput < 0) || (yPos >= MAX_DEGREES_Y && yAxisInput > 0))
     {
@@ -649,7 +597,7 @@ void manualControlOverride()
       markerInProgress = true;
       markerDown = true;
       // Set low torque for constant gentle pressure
-      MMotor.setMaxTorque(5, percent);
+      MMotor.setMaxTorque(10, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(forward);
       markerInProgress = false;
@@ -669,11 +617,11 @@ void manualControlOverride()
       MMotor.stop(brake);
       markerInProgress = false;
     }
-
+    
     // Keep marker pressing down with low torque when in down position
     if (markerDown && !markerInProgress)
     {
-      MMotor.setMaxTorque(5, percent);
+      MMotor.setMaxTorque(10, percent);
       MMotor.setVelocity(100, percent);
       MMotor.spin(forward);
     }
@@ -681,7 +629,7 @@ void manualControlOverride()
     Brain.Screen.setCursor(1, 1);
     Brain.Screen.clearLine();
     Brain.Screen.print("X: %.1f deg  AxisB: %d", xPos, xAxisInput);
-
+    
     Brain.Screen.setCursor(2, 1);
     Brain.Screen.clearLine();
     Brain.Screen.print("Y: %.1f deg  AxisA: %d", yPos, yAxisInput);
@@ -699,7 +647,9 @@ void markerSwitch()
 
   //time in seconds the marker motors will spin for
   const int MARKER_RETRACT_TIME = 2;
-  const int MARKER_INSERTION_TIME = 2;
+  const int MARKER_INSERTION_TIME = 2; 
+
+    TouchLED.setBlink(purple, 0.5, 0.5);
 
     MMotor.setVelocity(MARKER_RETRACT_SPEED, percent);
     MMotor.spin(reverse);
@@ -747,20 +697,20 @@ void drawMenu(int selectedOption) {
     "Recalibration",
     "Shutdown"
   };
-
+  
   // colors for each menu option
   color optionColors[] = {blue, green, purple, yellow, orange};
-
+  
   // Clear screen with the selected option's color
   Brain.Screen.clearScreen(optionColors[selectedOption]);
-
+  
   Brain.Screen.setPenColor(white);
   Brain.Screen.setFont(mono15);
-
+  
   // Draw menu options
   for (int i = 0; i < NUM_OPTIONS; i++) {
     Brain.Screen.setCursor(i + 1, 1);
-
+    
     // Highlight selected option with arrow and bright color
     if (i == selectedOption) {
       Brain.Screen.setPenColor(yellow);
@@ -770,9 +720,9 @@ void drawMenu(int selectedOption) {
       Brain.Screen.print("  %s", menuOptions[i]);
     }
   }
-
+  
   Brain.Screen.setPenColor(white);
-
+  
   // Navigation instructions
   Brain.Screen.setPenColor(white);
   Brain.Screen.setCursor(7, 1);
@@ -786,17 +736,17 @@ int mainMenu ()
 {
   int selectedOption = 0;
   const int NUM_OPTIONS = 5;
-
+  
   bool buttonPressed = false;
   bool needsRedraw = true;
-
+  
   while (true) {
     // Only redraw when selection changes
     if (needsRedraw) {
       drawMenu(selectedOption);
       needsRedraw = false;
     }
-
+    
     // Check for buttonLeft (navigate up)
     if (Brain.buttonLeft.pressing()) {
       if (!buttonPressed) {
@@ -832,17 +782,17 @@ int mainMenu ()
     else {
       buttonPressed = false;
     }
-
+    
     wait(50, msec);
   }
-
+  
   return selectedOption;
 }
 
 void penPressure(bool applyPressure)
 {
   if (applyPressure == true) {
-      MMotor.setMaxTorque(5, percent);
+      MMotor.setMaxTorque(10, percent);
       MMotor.setVelocity(20, percent);
       MMotor.spin(forward);
   }
@@ -853,180 +803,6 @@ void penPressure(bool applyPressure)
   }
 }
 
-// presents a color on touch led based on a certain state of robot
-void keepUserInformed(char C)
-{
-  // while homing all axies
-  if (C == 'H')
-  {
-    TouchLED.setColor(yellow);
-  }
-
-  // startup done and completed
-  else if (C == 'S')
-  {
-    TouchLED.setColor(green);
-  }
-
-  // autodraw
-  else if (C == 'A')
-  {
-    TouchLED.setColor(orange);
-  }
-
-  // controller
-  else if (C == 'C')
-  {
-    TouchLED.setColor(blue);
-  }
-
-  // marker switcher
-  else if (C == 'M')
-  {
-    TouchLED.setColor(purple);
-  }
-
-  // limit triggered unexpectedly
-  else if (C == 'T')
-  {
-    // use return to main menu function
-  }
-
-  // paper is removed
-  else if (C == 'R')
-  {
-    TouchLED.setColor(red);
-    while (!TouchLED.pressing())
-    {
-      wait(0.5, seconds);
-      TouchLED.setFade(fast);
-      wait(0.5, seconds);
-      TouchLED.setBrightness(100);
-    }
-    TouchLED.off();
-  }
-
-  // shutdown procedure
-  else if (C == 'P')
-  {
-    TouchLED.setColor(red);
-  }
-
-}
-
-const float SEGMENTS_P1[][2][2] = {
-	{{1.0, 1}, {1.0, 10}},
-	{{2.5, 10.0}, {6, 10.0}},
-	{{7.5, 1}, {7.5, 10}},
-	{{2.5, 1.0}, {6, 1.0}},
-	{{1.25, 1}, {1.25, 10}},
-	{{2.5, 9.75}, {6, 9.75}},
-	{{7.25, 1}, {7.25, 10}},
-	{{2.5, 1.25}, {6, 1.25}},
-	{{1.5, 1}, {1.5, 10}},
-	{{2.5, 9.5}, {6, 9.5}},
-	{{7.0, 1}, {7.0, 10}},
-	{{2.5, 1.5}, {6, 1.5}},
-	{{1.75, 1}, {1.75, 10}},
-	{{2.5, 9.25}, {6, 9.25}},
-	{{6.75, 1}, {6.75, 10}},
-	{{2.5, 1.75}, {6, 1.75}},
-	{{2.0, 1}, {2.0, 10}},
-	{{2.5, 9.0}, {6, 9.0}},
-	{{6.5, 1}, {6.5, 10}},
-	{{2.5, 2.0}, {6, 2.0}},
-	{{4.25, 5.5}, {4.283333333333333, 5.5}},
-	{{4.283333333333333, 5.5}, {4.303172261921682, 5.540213865849686}},
-	{{4.303172261921682, 5.540213865849686}, {4.2772280247040575, 5.596221799352929}},
-	{{4.2772280247040575, 5.596221799352929}, {4.201566502603603, 5.624225497011406}},
-	{{4.201566502603603, 5.624225497011406}, {4.108045510976159, 5.5873309843283465}},
-	{{4.108045510976159, 5.5873309843283465}, {4.050920760326564, 5.4808308494959554}},
-	{{4.050920760326564, 5.4808308494959554}, {4.078244013005396, 5.342062273740712}},
-	{{4.078244013005396, 5.342062273740712}, {4.202319409302307, 5.2376306565510555}},
-	{{4.202319409302307, 5.2376306565510555}, {4.385263262206829, 5.232224254464362}},
-	{{4.385263262206829, 5.232224254464362}, {4.549342525253539, 5.353353610048028}},
-	{{4.549342525253539, 5.353353610048028}, {4.609929967264144, 5.569963298304733}},
-	{{4.609929967264144, 5.569963298304733}, {4.5171330221884185, 5.797724618492461}},
-	{{4.5171330221884185, 5.797724618492461}, {4.286260398777337, 5.931813572341452}},
-	{{4.286260398777337, 5.931813572341452}, {4.000635570284747, 5.894455522170199}},
-	{{4.000635570284747, 5.894455522170199}, {3.7819702321305133, 5.675920824202351}},
-	{{3.7819702321305133, 5.675920824202351}, {3.7386294747369635, 5.348525149491241}},
-	{{3.7386294747369635, 5.348525149491241}, {3.913729297591236, 5.043893514831649}},
-	{{3.913729297591236, 5.043893514831649}, {4.257330200501149, 4.900044778203728}},
-	{{4.257330200501149, 4.900044778203728}, {4.6381744673135525, 4.999568492162063}},
-	{{4.6381744673135525, 4.999568492162063}, {4.89364842058615, 5.326330327571568}},
-	{{4.89364842058615, 5.326330327571568}, {4.8990286981967515, 5.762224615391139}},
-	{{4.8990286981967515, 5.762224615391139}, {4.6265969181759905, 6.129247597530673}},
-	{{4.6265969181759905, 6.129247597530673}, {4.167200493958716, 6.2621824057121085}},
-	{{4.167200493958716, 6.2621824057121085}, {3.701345317658099, 6.082218206125768}},
-	{{3.701345317658099, 6.082218206125768}, {3.428336635774579, 5.638973955596751}},
-	{{3.428336635774579, 5.638973955596751}, {3.4812572779122077, 5.099817868529637}},
-	{{3.4812572779122077, 5.099817868529637}, {3.863958379937169, 4.68699823642303}},
-	{{3.863958379937169, 4.68699823642303}, {4.439268142332746, 4.586058710086352}},
-	{{4.439268142332746, 4.586058710086352}, {4.9773344119325325, 4.863266855218607}},
-	{{4.9773344119325325, 4.863266855218607}, {5.247440782930944, 5.428502555667316}},
-	{{5.247440782930944, 5.428502555667316}, {5.116626253543606, 6.062793669515527}},
-	{{5.116626253543606, 6.062793669515527}, {4.61307152022725, 6.502974002144448}},
-	{{4.61307152022725, 6.502974002144448}, {3.9247211449515484, 6.550806198334578}},
-	{{3.9247211449515484, 6.550806198334578}, {3.3296386695226188, 6.1613467062036}},
-	{{3.3296386695226188, 6.1613467062036}, {3.0836815952552863, 5.4714957921552365}},
-	{{3.0836815952552863, 5.4714957921552365}, {3.310870211777102, 4.752982436034858}},
-	{{3.310870211777102, 4.752982436034858}, {3.9432824724966817, 4.305414101274687}},
-	{{3.9432824724966817, 4.305414101274687}, {4.738814320277469, 4.331451753355421}},
-	{{4.738814320277469, 4.331451753355421}, {5.373557242539816, 4.846074069380694}},
-	{{5.373557242539816, 4.846074069380694}, {5.573676455905927, 5.66018245177953}},
-	{{5.573676455905927, 5.66018245177953}, {5.233097727129489, 6.449366439627298}},
-	{{5.233097727129489, 6.449366439627298}, {4.466594540819253, 6.8831438120771455}},
-	{{4.466594540819253, 6.8831438120771455}, {3.57267723702102, 6.763201614626487}},
-	{{3.57267723702102, 6.763201614626487}, {2.9175213396274753, 6.11287170824158}},
-	{{2.9175213396274753, 6.11287170824158}, {2.784991582498748, 5.177897009249405}},
-	{{2.784991582498748, 5.177897009249405}, {3.2541796592270518, 4.334044186079952}},
-	{{3.2541796592270518, 4.334044186079952}, {4.1570866813976615, 3.9360909362527674}},
-	{{4.1570866813976615, 3.9360909362527674}, {5.1377510839168, 4.1688734045912295}},
-	{{5.1377510839168, 4.1688734045912295}, {5.7924814047212205, 4.962851143660317}},
-	{{5.7924814047212205, 4.962851143660317}, {5.835990673132396, 6.012261029666349}},
-	{{5.835990673132396, 6.012261029666349}, {5.225079941796779, 6.892558475291286}},
-	{{5.225079941796779, 6.892558475291286}, {4.186484238241969, 7.232169215883005}},
-	{{4.186484238241969, 7.232169215883005}, {3.1334148986254293, 6.869068596710717}},
-	{{3.1334148986254293, 6.869068596710717}, {2.5012115840042366, 5.926308662918112}},
-	{{2.5012115840042366, 5.926308662918112}, {2.567449852912702, 4.771895533836233}},
-	{{2.567449852912702, 4.771895533836233}, {3.3308093544735318, 3.8753360342455183}},
-	{{3.3308093544735318, 3.8753360342455183}, {4.5012871414885245, 3.6166904735220697}},
-	{{4.5012871414885245, 3.6166904735220697}, {5.609896425433646, 4.1257876838455525}},
-	{{5.609896425433646, 4.1257876838455525}, {6.19655992078532, 5.219496430379168}},
-	{{6.19655992078532, 5.219496430379168}, {6.000929054000031, 6.466564766510013}}
-};
-
-const float AUTOMATED_TOLERANCE = 0.05;
-/*
-void automatedDrawing(const float segments[][2][2], const int segs) {
-	float xloc = 0; float yloc = 0;
-	
-	bool markerDownYet = false;
-	
-	for (int cseg=0; cseg<segs; cseg++) {
-		// TODO: convert to inches
-		xloc = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
-		yloc = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
-		
-		segdata = segments[cseg];
-		
-		// If farther than 0.05 on either axis from the start of next line, pick up marker and move there
-		if (abs(xloc)-abs(segdata[0][0]) > AUTOMATED_TOLERANCE || abs(yloc)-abs(segdata[0][1]) > AUTOMATED_TOLERANCE) {
-			markerUp();
-			moveTo(segdata[0][0], segdata[0][1]);
-			markerDown();
-			markerDownYet = true;
-		}
-		// Move to end of line segment with marker down
-		if (!markerDownYet) {
-			markerDown();
-			markerDownYet = true;
-		}
-		moveTo(segdata[1][0], segdata[1][1]);
-	}
-}
-*/
 int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -1035,9 +811,15 @@ int main() {
   MMotor.setPosition(0, degrees);
 
   // Begin project code
-
+  
   // Initial calibration
   calibrateAllAxes();
+
+  if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+  {
+    keepUserInformed('S');
+  }
+  
   // Main menu loop
   while (true) {
     int selection = mainMenu();
@@ -1047,26 +829,31 @@ int main() {
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Starting Manual Mode");
+        keepUserInformed('C');
         wait(500, msec);
         manualControlOverride();
-        break;
 
+        if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+        {
+          keepUserInformed('S');
+        }
+        keepUserInformed('O'); 
+        break;
+        
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        moveTo(0,0);
-        moveTo(0, 400);
-        moveTo(0, 400);
-        moveTo(400, 400);
-        moveTo(400, 0);
-        moveTo(0,0);
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Automator Mode");
-        keepUserInformed('A');
+        TouchLED.setBlink(orange, 0.5, 0.5);
         Brain.Screen.setCursor(2, 1);
         Brain.Screen.print("Not implemented yet");
         wait(2, seconds);
+        if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+        {
+          keepUserInformed('S');
+        }
         break;
-
+        
       case 2: // Switch Marker
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
@@ -1074,18 +861,29 @@ int main() {
         keepUserInformed('M');
         wait(500, msec);
         markerSwitch();
-        break;
+        while (TouchLED.pressing())
+        {
 
+        }
+        while (!TouchLED.pressing())
+        {
+          keepUserInformed('S');
+        }
+
+        break;
+        
       case 3: // Recalibration
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("Recalibrating...");
+        keepUserInformed('H'); 
         calibrateAllAxes();
         Brain.Screen.setCursor(2, 1);
         Brain.Screen.print("Done!");
         wait(1, seconds);
+        keepUserInformed('S'); 
         break;
-
+        
       case 4: // Shutdown
         //Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
@@ -1093,9 +891,9 @@ int main() {
         keepUserInformed('P');
         wait(1, seconds);
         Brain.programStop();
+        keepUserInformed('O'); 
         return 0;
     }
   }
-
   Brain.programStop();
 }
