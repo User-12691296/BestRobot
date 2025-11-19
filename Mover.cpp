@@ -897,4 +897,6 @@ int main() {
         running = false;
     }
   }
+  
+  Brain.ProgramStop();
 }
