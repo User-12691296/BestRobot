@@ -633,26 +633,6 @@ void keepUserInformed(char C)
     TouchLED.setColor(purple);
   }
 
-  // limit triggered unexpectedly
-  else if (C == 'T')
-  {
-    // use return to main menu function
-  }
-
-  // paper is removed
-  else if (C == 'R')
-  {
-    TouchLED.setColor(red);
-    while (!TouchLED.pressing())
-    {
-      wait(0.5, seconds);
-      TouchLED.setFade(fast);
-      wait(0.5, seconds);
-      TouchLED.setBrightness(100);
-    }
-    TouchLED.off();
-  }
-
   // shutdown procedure
   else if (C == 'P')
   {
@@ -914,12 +894,7 @@ int main() {
         wait(1, seconds);
         TouchLED.setFade(slow);
         exitRobot();
-<<<<<<< HEAD
         running = false;
-=======
-        Brain.programStop();
-        return 0;
->>>>>>> 71be78bf4dbc0f56d41102b53dac142598991a20
     }
   }
 }
