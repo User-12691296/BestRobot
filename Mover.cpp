@@ -833,9 +833,8 @@ int main() {
         wait(1, seconds);
         TouchLED.setFade(slow);
         exitRobot();
+        Brain.programStop();
         return 0;
     }
   }
-
-  Brain.programStop();
 }
