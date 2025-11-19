@@ -873,10 +873,9 @@ int main() {
         {
 
         }
-        while (!TouchLED.pressing())
-        {
-          keepUserInformed('S');
-        }
+        
+        keepUserInformed('S');
+
         break;
 
       case 3: // Recalibration
