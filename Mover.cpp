@@ -95,308 +95,8 @@ void markerSwitch();
 void drawMenu(int selectedOption);
 void penPressure(bool applyPressure);
 void keepUserInformed(char C);
+void exitRobot();
 int mainMenu();
-
-
-// presents a color on touch led based on a certain state of robot
-void KeepUserInformed(char C);
-
-class Mover {
-  private:
-    bool XTargetSet, YTargetSet, MTargetSet;
-    float XTarget, YTarget, MTarget;
-    float DXSpeed, DYSpeed, DMSpeed,
-        UXSpeed, UYSpeed, UMSpeed;
-
-    bool paused, stopped;
-
-    // In mm/degree
-    const float X_MM_PER_DEG = 0.25;
-    const float Y_MM_PER_DEG = 0.05;
-    const float M_MM_PER_DEG = 1.8;
-
-    // In degrees/s
-    const float MAX_MOTOR_SPEED_DEG_PER_S = 90.0;
-    const float MIN_MOTOR_SPEED_PERCENT = 0.03;
-    // In mm/s
-    const float MAX_X_SPEED = X_MM_PER_DEG*MAX_MOTOR_SPEED_DEG_PER_S;
-    const float MAX_Y_SPEED = Y_MM_PER_DEG*MAX_MOTOR_SPEED_DEG_PER_S;
-    const float MAX_M_SPEED = M_MM_PER_DEG*MAX_MOTOR_SPEED_DEG_PER_S;
-    const float PERCENT = 100.0;
-
-    // In mm
-    const float MAX_TARGET_TOLERANCE = 0.8;
-    const float MAX_SPEED_AT_TARGET = 0.2;
-
-    // K-values for PID
-    const float K_P = 0.1;
-    const float K_I = 0;
-    const float K_D = 0;
-
-    const float X_MIN = 0.0;
-    const float Y_MIN = 0.0;
-    const float M_MIN = 0.0;
-
-    const float X_MAX = 11.0*25.4;
-    const float Y_MAX = 8.5*25.4;
-    const float M_MAX = 20.0;
-
-    float getXAPos () {
-      return X_MM_PER_DEG*XMotor.position(degrees);
-    }
-    float getYAPos() {
-      return Y_MM_PER_DEG*YMotor.position(degrees);
-    }
-    int getMAPos() {
-      return M_MM_PER_DEG*MMotor.position(degrees);
-    }
-
-    void setXASpeed(float aXSpeed) {
-      if (abs(aXSpeed/MAX_X_SPEED*PERCENT) > MIN_MOTOR_SPEED_PERCENT) {
-        XMotor.setVelocity(aXSpeed/MAX_X_SPEED*PERCENT, percent);
-        XMotor.spin(forward);
-      } else {
-        XMotor.stop();
-      }
-    }
-    void setYASpeed(float aYSpeed) {
-      if (abs(aYSpeed/MAX_Y_SPEED*PERCENT) > MIN_MOTOR_SPEED_PERCENT) {
-        YMotor.setVelocity(aYSpeed/MAX_Y_SPEED*PERCENT, percent);
-        YMotor.spin(forward);
-      } else {
-        YMotor.stop();
-      }
-    }
-    void setMASpeed(float aMSpeed) {
-      if (abs(aMSpeed/MAX_M_SPEED*PERCENT) > MIN_MOTOR_SPEED_PERCENT) {
-        MMotor.setVelocity(aMSpeed/MAX_M_SPEED*PERCENT, percent);
-        MMotor.spin(forward);
-      } else {
-        MMotor.stop();
-      }
-    }
-
-    void pauseXMotor() {
-      if (UXSpeed != 0.0) {
-        setXASpeed(0.0);
-        UXSpeed = 0.0;
-      }
-    }
-    bool updateXSpeed() {
-      // Check lower bound (at origin, position = 0)
-      if (DXSpeed < 0 && getXAPos()<=X_MIN) {
-        // Below lower bound
-        pauseXMotor();
-        return false;
-      }
-      // Check upper bound
-      if (DXSpeed > 0 && getXAPos()>=X_MAX) {
-        // Above upper bound
-        pauseXMotor();
-        return false;
-      }
-      if (DXSpeed != UXSpeed) {
-        setXASpeed(DXSpeed);
-        UXSpeed = DXSpeed;
-        return true;
-      }
-      return false;
-    }
-
-    void pauseYMotor() {
-      if (UYSpeed != 0.0) {
-        setYASpeed(0.0);
-        UYSpeed = 0.0;
-      }
-    }
-    bool updateYSpeed() {
-      // Check lower bound (at origin, position = 0)
-      if (DYSpeed < 0 && getYAPos()<=Y_MIN) {
-        // Below lower bound
-        pauseYMotor();
-        return false;
-      }
-      // Check upper bound
-      if (DYSpeed > 0 && getYAPos()>=Y_MAX) {
-        // Above upper bound
-        pauseYMotor();
-        return false;
-      }
-      if (DYSpeed != UYSpeed) {
-        setYASpeed(DYSpeed);
-        UYSpeed = DYSpeed;
-        return true;
-      }
-      return false;
-    }
-
-    void pauseMMotor() {
-      if (UMSpeed != 0.0) {
-        setMASpeed(0.0);
-        UMSpeed = 0.0;
-      }
-    }
-    bool updateMSpeed() {
-      if (DMSpeed < 0 && getMAPos()<=M_MIN) {
-        // Below lower bound
-        pauseMMotor();
-      }
-      if (DMSpeed > 0 && getMAPos()>=M_MAX) {
-        // Above upper bound
-        pauseMMotor();
-      }
-      if (DMSpeed != UMSpeed) {
-        setMASpeed(DMSpeed);
-        UMSpeed = DMSpeed;
-        return true;
-      }
-      return false;
-    }
-
-    void ifXTargetSetPIDControl() {
-      if (XTargetSet) {
-        float toCover = XTarget - getXAPos();
-        if (abs(toCover) < MAX_TARGET_TOLERANCE && abs(UXSpeed) < MAX_SPEED_AT_TARGET) {
-          XTargetSet = false;
-          pauseXMotor();
-        } else {
-          DXSpeed = K_P*toCover;
-        }
-      }
-    }
-
-  public:
-    Mover() {
-      XTargetSet = false;
-      YTargetSet = false;
-      MTargetSet = false;
-
-      // In mm
-      XTarget = 0.0;
-      YTarget = 0.0;
-      MTarget = 0.0;
-
-      // Desired Speed In mm/s
-      DXSpeed = 0.0;
-      DYSpeed = 0.0;
-      DMSpeed = 0.0;
-
-      UXSpeed = 0.0;
-      UYSpeed = 0.0;
-      UMSpeed = 0.0;
-
-      paused = false;
-      stopped = false;
-    }
-
-    float getXSpeed() {
-      return UXSpeed;
-    }
-    float getYSpeed() {
-      return UYSpeed;
-    }
-    float getMSpeed() {
-      return UMSpeed;
-    }
-
-    bool setXSpeed(float nXSpeed) {
-      if (nXSpeed != DXSpeed) {
-        if (nXSpeed < -MAX_X_SPEED) {
-          DXSpeed = -MAX_X_SPEED;
-        } else if (nXSpeed > MAX_X_SPEED) {
-          DXSpeed = MAX_X_SPEED;
-        } else {
-          DXSpeed = nXSpeed;
-        }
-        return true;
-      }
-      return false;
-    }
-    bool setYSpeed(float nYSpeed) {
-      if (nYSpeed != DYSpeed) {
-        if (nYSpeed < -MAX_Y_SPEED) {
-          DYSpeed = -MAX_Y_SPEED;
-        } else if (nYSpeed > MAX_Y_SPEED) {
-          DYSpeed = MAX_Y_SPEED;
-        } else {
-          DYSpeed = nYSpeed;
-        }
-        return true;
-      }
-      return false;
-    }
-    bool setMSpeed(float nMSpeed) {
-      if (nMSpeed != DMSpeed) {
-        if (nMSpeed < -MAX_M_SPEED) {
-          DMSpeed = -MAX_M_SPEED;
-        } else if (nMSpeed > MAX_M_SPEED) {
-          DMSpeed = MAX_M_SPEED;
-        } else {
-        DMSpeed = nMSpeed;
-        }
-        return true;
-      }
-      return false;
-    }
-
-    bool isXTargetSet() {
-      return XTargetSet;
-    }
-    bool setXTarget(float nXTarget) {
-      if (nXTarget < X_MIN || nXTarget > X_MAX) {
-        return false;
-      }
-      XTarget = nXTarget;
-      XTargetSet = true;
-      return true;
-    }
-    bool reachedXTarget() {
-      return (abs(XTarget-getXAPos()) < MAX_TARGET_TOLERANCE);
-    }
-
-    // Return whether now paused
-    bool changePause() {
-      paused = !paused;
-      return paused;
-    }
-    // Return whether change occured
-    bool pause() {
-      if (!paused) {
-        paused = true;
-        return true;
-      }
-      return false;
-    }
-    bool unPause() {
-      if (paused) {
-        paused = false;
-        return true;
-      }
-      return false;
-    }
-
-    bool tick() {
-      if (paused) {
-        pauseXMotor();
-        pauseYMotor();
-        pauseMMotor();
-      }
-      else {
-        // Target processing
-        ifXTargetSetPIDControl();
-
-        // Speed updating
-        if (updateXSpeed() || updateYSpeed() || updateMSpeed()) {
-          // Moved successfully
-        }
-        else {
-          // Attempting to move to unreachable location - Stuck
-          return false;
-        }
-      }
-      return true;
-    }
-};
 
 void calibrateAllAxes()
 {
@@ -406,6 +106,7 @@ void calibrateAllAxes()
   const double APPROACH_SPEED = 10.0; //towards sensor
   const double RETRACT_SPEED = 20; //away from sensor
 
+  TouchLED.setBlink(yellow, 0.5, 0.5);
 
   double samplesY[YSAMPLES];
 
@@ -568,6 +269,8 @@ void manualControlOverride()
   bool xSpinningForward = true;
   bool ySpinningForward = true;
 
+  TouchLED.setBlink(blue, 0.5, 0.5);
+
   while (!Controller.ButtonFDown.pressing())
   {
     //moves along the x-axis
@@ -707,6 +410,8 @@ void markerSwitch()
   //time in seconds the marker motors will spin for
   const int MARKER_RETRACT_TIME = 2;
   const int MARKER_INSERTION_TIME = 2;
+
+  TouchLED.setBlink(purple, 0.5, 0.5);
 
     MMotor.setVelocity(MARKER_RETRACT_SPEED, percent);
     MMotor.spin(reverse);
@@ -1038,6 +743,12 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 	}
 }
 
+void exitRobot()
+{
+  moveTo(0,0);
+  markerUp();
+}
+
 int main() {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
@@ -1049,6 +760,11 @@ int main() {
 
   // Initial calibration
   calibrateAllAxes();
+  if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+  {
+    keepUserInformed('S');
+  }
+
   // Main menu loop
   while (true) {
     int selection = mainMenu();
@@ -1060,12 +776,25 @@ int main() {
         Brain.Screen.print("Starting Manual Mode");
         wait(500, msec);
         manualControlOverride();
+
+        if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+        {
+          keepUserInformed('S');
+        }
+        
         break;
 
       case 1: // Automator
         //Brain.Screen.clearScreen();
+        TouchLED.setBlink(orange, 0.5, 0.5);
         automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
+
+        if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
+        {
+          keepUserInformed('S');
+        }
+
         break;
 
       case 2: // Switch Marker
@@ -1075,6 +804,14 @@ int main() {
         keepUserInformed('M');
         wait(500, msec);
         markerSwitch();
+        while (TouchLED.pressing())
+        {
+
+        }
+        while (!TouchLED.pressing())
+        {
+          keepUserInformed('S');
+        }
         break;
 
       case 3: // Recalibration
@@ -1085,6 +822,7 @@ int main() {
         Brain.Screen.setCursor(2, 1);
         Brain.Screen.print("Done!");
         wait(1, seconds);
+        keepUserInformed('S'); 
         break;
 
       case 4: // Shutdown
