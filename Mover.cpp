@@ -48,7 +48,7 @@ void initializeRandomSeed(){
     xAxis + yAxis + zAxis
   );
   // Set the seed
-  srand(seed);
+  srand(seed); 
 }
 
 
@@ -56,7 +56,7 @@ void initializeRandomSeed(){
 void vexcodeInit() {
 
   // Initializing random seed.
-  initializeRandomSeed();
+  initializeRandomSeed(); 
 }
 
 
@@ -221,10 +221,10 @@ void moveTo(float x, float y)
 
     Brain.Screen.setCursor(1,1);
     Brain.Screen.clearLine(1);
-    Brain.Screen.print("X: %f", xLocation);
+    Brain.Screen.print("X: %f", x);
     Brain.Screen.setCursor(2,1);
     Brain.Screen.clearLine(2);
-    Brain.Screen.print("Y: %f", yLocation);
+    Brain.Screen.print("Y: %f", y);
     Brain.Screen.setCursor(3,1);
     Brain.Screen.clearLine(3);
     Brain.Screen.print("XDO: %f", xDistanceOff);
@@ -278,10 +278,10 @@ void moveTo(float x, float y)
 
 void markerDown()
 {
-  MMotor.setMaxTorque(2, percent);
-  MMotor.setVelocity(30, percent);
+  MMotor.setMaxTorque(60, percent);
+  MMotor.setVelocity(40, percent);
   MMotor.spin(forward);
-  wait(500, msec);
+  wait(800, msec);
   MMotor.stop();
 }
 
@@ -290,7 +290,7 @@ void markerUp()
   MMotor.setMaxTorque(100, percent);
   MMotor.setVelocity(20, percent);
   MMotor.spin(reverse);
-  wait(200, msec);
+  wait(800, msec);
   MMotor.stop(brake);
 }
 
@@ -586,7 +586,7 @@ int mainMenu ()
 void penPressure(bool applyPressure)
 {
   if (applyPressure == true) {
-      MMotor.setMaxTorque(1, percent);
+      MMotor.setMaxTorque(2, percent);
       //MMotor.setVelocity(20, percent);
       MMotor.spin(forward);
   }
@@ -781,7 +781,7 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 		yloc = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
 		
 		// If farther than 0.05 on either axis from the start of next line, pick up marker and move there
-		if (abs(xloc)-abs(segments[cseg][0][0]) > AUTOMATED_TOLERANCE || abs(yloc)-abs(segments[cseg][0][1]) > AUTOMATED_TOLERANCE) {
+		if (abs(xloc - segments[cseg][0][0]) > AUTOMATED_TOLERANCE || abs(yloc - segments[cseg][0][1]) > AUTOMATED_TOLERANCE) {
 			markerUp();
 			moveTo(segments[cseg][0][0], segments[cseg][0][1]);
 			markerDown();
@@ -792,7 +792,9 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 			markerDown();
 			markerDownYet = true;
 		}
+    penPressure(true);
 		moveTo(segments[cseg][1][0], segments[cseg][1][1]);
+    penPressure(false);
 	}
 }
 
@@ -819,7 +821,8 @@ int main() {
   }
 
   // Main menu loop
-  while (true) {
+  bool running = true;
+  while (running) {
     int selection = mainMenu();
 
     switch (selection) {
@@ -838,19 +841,9 @@ int main() {
         break;
 
       case 1: // Automator
+        TouchLED.setBlink(orange, 0.5, 0.5);
         //Brain.Screen.clearScreen();
-        //automatedDrawing(CUBE, 12);
-
-		TouchLED.setBlink(orange, 0.5, 0.5);
-
-        markerUp();
-        moveTo(0, 0);
-        markerDown();
-        moveTo(4, 0);
-        moveTo(4, 4);
-        moveTo(0, 4);
-        moveTo(0, 0);
-        markerUp();
+        automatedDrawing(CUBE, 12);
 
         //automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
@@ -898,7 +891,7 @@ int main() {
         wait(1, seconds);
         TouchLED.setFade(slow);
         exitRobot();
-        return 0;
+        running = false;
     }
   }
 
