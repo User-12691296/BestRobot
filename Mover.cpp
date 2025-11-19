@@ -259,8 +259,8 @@ void moveTo(float x, float y)
 
 void markerDown()
 {
-  MMotor.setMaxTorque(60, percent);
-  MMotor.setVelocity(40, percent);
+  MMotor.setMaxTorque(10, percent);
+  MMotor.setVelocity(10, percent);
   MMotor.spin(forward);
   wait(800, msec);
   MMotor.stop();
@@ -271,7 +271,7 @@ void markerUp()
   MMotor.setMaxTorque(100, percent);
   MMotor.setVelocity(20, percent);
   MMotor.spin(reverse);
-  wait(800, msec);
+  wait(200, msec);
   MMotor.stop(brake);
 }
 
