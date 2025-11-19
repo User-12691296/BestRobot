@@ -76,6 +76,7 @@ bool RemoteControlCodeEnabled = true;
 
 // Include the IQ Library
 #include "iq_cpp.h"
+#include "cmath"
 
 // Allows for easier use of the VEX Library
 using namespace vex;
@@ -185,15 +186,22 @@ void moveTo(float x, float y)
   float xLocation = -1;
   float yLocation = -1;
 
+  xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
+  yLocation = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
+
   float xDistanceOff = -1;
   float yDistanceOff = -1;
   const float ERROR_MARGIN = 0.1;
+  xDistanceOff = x - xLocation;
+  yDistanceOff = y - yLocation;
 
   bool xReached = false;
   bool yReached = false;
 
-  const int X_VELOCITY = 10;
-  const int Y_VELOCITY = 35;
+  float D_LEN = pow((xDistanceOff*xDistanceOff)+(yDistanceOff*yDistanceOff), 0.5);
+
+  const int X_VELOCITY = abs(10 * (xDistanceOff/D_LEN));
+  const int Y_VELOCITY = abs(10 * ((GEAR_RATIO_Y / GEAR_RATIO_X) * (yDistanceOff/D_LEN)));
 
   XMotor.setVelocity(X_VELOCITY, percent);
   YMotor.setVelocity(Y_VELOCITY, percent);
@@ -201,13 +209,15 @@ void moveTo(float x, float y)
   XMotor.spin(forward);
   YMotor.spin(forward);
 
+  int tick=0;
+
   while(xReached == false || yReached == false)
   {
 
     xLocation = (static_cast<float>(XMotor.position(degrees)))/GEAR_RATIO_X;
     yLocation = (static_cast<float>(YMotor.position(degrees)))/GEAR_RATIO_Y;
-    xDistanceOff = abs(x - xLocation);
-    yDistanceOff = abs(y - yLocation);
+    xDistanceOff = x - xLocation;
+    yDistanceOff = y - yLocation;
 
     Brain.Screen.setCursor(1,1);
     Brain.Screen.clearLine(1);
@@ -215,48 +225,70 @@ void moveTo(float x, float y)
     Brain.Screen.setCursor(2,1);
     Brain.Screen.clearLine(2);
     Brain.Screen.print("Y: %f", yLocation);
+    Brain.Screen.setCursor(3,1);
+    Brain.Screen.clearLine(3);
+    Brain.Screen.print("XDO: %f", xDistanceOff);
+    Brain.Screen.setCursor(4,1);
+    Brain.Screen.clearLine(4);
+    Brain.Screen.print("YDO: %f", yDistanceOff);
+    Brain.Screen.setCursor(5,1);
+    Brain.Screen.clearLine(5);
+    Brain.Screen.print("XL: %f", xLocation);
+    Brain.Screen.setCursor(6,1);
+    Brain.Screen.clearLine(6);
+    Brain.Screen.print("XL: %f", yLocation);
 
-    if (xLocation < x && xDistanceOff > ERROR_MARGIN)
+    if (xLocation < x && abs(xDistanceOff) > ERROR_MARGIN)
     {
       XMotor.setVelocity(X_VELOCITY, percent);
     }
-    else if (xLocation > x && xDistanceOff > ERROR_MARGIN)
+    else if (xLocation > x && abs(xDistanceOff) > ERROR_MARGIN)
     {
       XMotor.setVelocity(-X_VELOCITY, percent);
     }
-    else if (xDistanceOff <= ERROR_MARGIN)
+    else if (abs(xDistanceOff) <= ERROR_MARGIN)
     {
       XMotor.stop(brake);
       xReached = true;
     }
 
-    if (yLocation < y && yDistanceOff > ERROR_MARGIN)
+    if (yLocation < y && abs(yDistanceOff) > ERROR_MARGIN)
     {
       YMotor.setVelocity(Y_VELOCITY, percent);
     }
-    else if (yLocation > y && yDistanceOff > ERROR_MARGIN)
+    else if (yLocation > y && abs(yDistanceOff) > ERROR_MARGIN)
     {
       YMotor.setVelocity(-Y_VELOCITY, percent);
     }
-    else if (yDistanceOff <= ERROR_MARGIN)
+    else if (abs(yDistanceOff) <= ERROR_MARGIN)
     {
       YMotor.stop(brake);
       yReached = true;
     }
+
+    if (tick%5 == 0) {
+      MMotor.setMaxTorque(8, percent);
+      MMotor.setVelocity(10, percent);
+      wait(200, msec);
+      MMotor.stop();
+    }
+    tick++;
   }
 }
 
 void markerDown()
 {
-  MMotor.setMaxTorque(5, percent);
-  MMotor.setVelocity(100, percent);
+  MMotor.setMaxTorque(2, percent);
+  MMotor.setVelocity(30, percent);
   MMotor.spin(forward);
+  wait(500, msec);
+  MMotor.stop();
 }
 
 void markerUp()
 {
   MMotor.setMaxTorque(100, percent);
-  MMotor.setVelocity(100, percent);
+  MMotor.setVelocity(20, percent);
   MMotor.spin(reverse);
   wait(200, msec);
   MMotor.stop(brake);
@@ -554,14 +586,15 @@ int mainMenu ()
 void penPressure(bool applyPressure)
 {
   if (applyPressure == true) {
-      MMotor.setMaxTorque(5, percent);
-      MMotor.setVelocity(20, percent);
+      MMotor.setMaxTorque(1, percent);
+      //MMotor.setVelocity(20, percent);
       MMotor.spin(forward);
   }
   else {
     MMotor.stop(brake);
-    MMotor.setMaxTorque(100, percent);
-    MMotor.setVelocity(50, percent);
+    MMotor.setMaxTorque(1, percent);
+    //MMotor.setVelocity(50, percent);
+    MMotor.spin(reverse);
   }
 }
 
@@ -711,11 +744,31 @@ const float SEGMENTS_P1[][2][2] = {
 
 const float SEG_TEST[][2][2] = {
 	{{0, 0}, {5, 0}},
-	{{5, 0}, {2.5, 4},
+	{{5, 0}, {2.5, 4}},
 	{{2.5, 4}, {0, 0}}
-}
+};
 
-const float AUTOMATED_TOLERANCE = 0.02;
+const float CUBE[][2][2] = {
+  // Front face (bottom square)
+  {{1, 1}, {4, 1}},      // bottom edge
+  {{4, 1}, {4, 4}},      // right edge
+  {{4, 4}, {1, 4}},      // top edge
+  {{1, 4}, {1, 1}},      // left edge
+ 
+  // Back face
+  {{2, 2}, {5, 2}},      // bottom edge
+  {{5, 2}, {5, 5}},      // right edge
+  {{5, 5}, {2, 5}},      // top edge
+  {{2, 5}, {2, 2}},      // left edge
+ 
+  // Connecting edges (front to back)
+  {{1, 1}, {2, 2}},      // bottom-left
+  {{4, 1}, {5, 2}},      // bottom-right
+  {{4, 4}, {5, 5}},      // top-right
+  {{1, 4}, {2, 5}}       // top-left
+};
+
+const float AUTOMATED_TOLERANCE = 0.05;
 
 void automatedDrawing(const float segments[][2][2], const int segs) {
 	float xloc = 0; float yloc = 0;
@@ -786,8 +839,20 @@ int main() {
 
       case 1: // Automator
         //Brain.Screen.clearScreen();
-        TouchLED.setBlink(orange, 0.5, 0.5);
-        automatedDrawing(SEG_TEST, 3);
+        //automatedDrawing(CUBE, 12);
+
+		TouchLED.setBlink(orange, 0.5, 0.5);
+
+        markerUp();
+        moveTo(0, 0);
+        markerDown();
+        moveTo(4, 0);
+        moveTo(4, 4);
+        moveTo(0, 4);
+        moveTo(0, 0);
+        markerUp();
+
+        //automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
 
         if (XMotor.isSpinning() == false || YMotor.isSpinning() == false)
