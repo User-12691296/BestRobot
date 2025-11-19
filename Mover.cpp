@@ -430,6 +430,8 @@ void manualControlOverride()
   MMotor.stop(brake);
   if (markerDown)
     markerUp();
+  TouchLED.setFade(slow);
+
   calibrateAllAxes();
 }
 
@@ -841,7 +843,7 @@ int main() {
         //Brain.Screen.clearScreen();
 
         TouchLED.setBlink(orange, 0.5, 0.5);
-        
+
         //automatedDrawing(CUBE, 12);
 
         markerUp();
