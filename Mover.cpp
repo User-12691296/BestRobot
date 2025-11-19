@@ -757,6 +757,10 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
 	bool markerDownYet = false;
 
   Brain.Timer.reset();
+
+  Brain.clearLine(2);
+  Brain.setCursor(2, 1);
+  Brain.Screen.print("Press Check to Early Exit");
 	
 	for (int cseg=0; cseg<segs; cseg++) {
 		// TODO: convert to inches
@@ -782,7 +786,12 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
     Brain.Screen.clearLine(1);
     Brain.Screen.setCursor(1, 1);
     Brain.Screen.print("ETime: ", Brain.Timer.value());
+
+    if (Brain.buttonCheck.pressing()) {
+      cseg = segs;
+    }
   }
+
 }
 
 void exitRobot()
