@@ -472,6 +472,10 @@ void calibrateAllAxes()
     double avgDegX = (samplesX[0] + samplesX[1] + samplesX[2]) / XSAMPLES;
     double currentDegX = XMotor.position(degrees);
     XMotor.setPosition(currentDegX - avgDegX, degrees);
+
+    wait(2000, msec);
+
+    moveTo(0,0);
 }
 
 void moveTo(float x, float y)
