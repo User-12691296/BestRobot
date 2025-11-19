@@ -1093,7 +1093,8 @@ int main() {
         Brain.Screen.print("Shutting down...");
         keepUserInformed('P');
         wait(1, seconds);
-        Brain.programStop();
+        TouchLED.setFade(slow);
+        exitRobot();
         return 0;
     }
   }
