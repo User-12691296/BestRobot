@@ -80,10 +80,9 @@ bool RemoteControlCodeEnabled = true;
 // Allows for easier use of the VEX Library
 using namespace vex;
 
-const float GEAR_RATIO_X = 0.632;
-const float GEAR_RATIO_Y = 6;
 
-const int MAX_DEGREES_X = 500;
+
+const int MAX_DEGREES_X = 1000;
 const int MAX_DEGREES_Y = 500;
 
 void calibrateAllAxes();
@@ -488,7 +487,10 @@ void moveTo(float x, float y)
   bool yReached = false;
 
   const int X_VELOCITY = 10;
-  const int Y_VELOCITY = 10;
+  const int Y_VELOCITY = 20;
+
+  const float GEAR_RATIO_X = 1.723;
+  const float GEAR_RATIO_Y = 6;
 
   XMotor.setVelocity(X_VELOCITY, percent);
   YMotor.setVelocity(Y_VELOCITY, percent);
@@ -689,6 +691,7 @@ void manualControlOverride()
   }
   XMotor.stop(brake);
   YMotor.stop(brake);
+  MMotor.stop(brake);
 }
 
 void markerSwitch()
