@@ -278,8 +278,8 @@ void moveTo(float x, float y)
 
 void markerDown()
 {
-  MMotor.setMaxTorque(60, percent);
-  MMotor.setVelocity(40, percent);
+  MMotor.setMaxTorque(10, percent);
+  MMotor.setVelocity(10, percent);
   MMotor.spin(forward);
   wait(800, msec);
   MMotor.stop();
@@ -288,9 +288,9 @@ void markerDown()
 void markerUp()
 {
   MMotor.setMaxTorque(100, percent);
-  MMotor.setVelocity(20, percent);
+  MMotor.setVelocity(10, percent);
   MMotor.spin(reverse);
-  wait(800, msec);
+  wait(100, msec);
   MMotor.stop(brake);
 }
 
@@ -893,12 +893,8 @@ int main() {
         wait(1, seconds);
         TouchLED.setFade(slow);
         exitRobot();
-<<<<<<< HEAD
         running = false;
-=======
         Brain.programStop();
-        return 0;
->>>>>>> 71be78bf4dbc0f56d41102b53dac142598991a20
     }
   }
 }
