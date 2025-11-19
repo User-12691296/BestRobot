@@ -219,25 +219,6 @@ void moveTo(float x, float y)
     xDistanceOff = x - xLocation;
     yDistanceOff = y - yLocation;
 
-    Brain.Screen.setCursor(1,1);
-    Brain.Screen.clearLine(1);
-    Brain.Screen.print("X: %f", x);
-    Brain.Screen.setCursor(2,1);
-    Brain.Screen.clearLine(2);
-    Brain.Screen.print("Y: %f", y);
-    Brain.Screen.setCursor(3,1);
-    Brain.Screen.clearLine(3);
-    Brain.Screen.print("XDO: %f", xDistanceOff);
-    Brain.Screen.setCursor(4,1);
-    Brain.Screen.clearLine(4);
-    Brain.Screen.print("YDO: %f", yDistanceOff);
-    Brain.Screen.setCursor(5,1);
-    Brain.Screen.clearLine(5);
-    Brain.Screen.print("XL: %f", xLocation);
-    Brain.Screen.setCursor(6,1);
-    Brain.Screen.clearLine(6);
-    Brain.Screen.print("XL: %f", yLocation);
-
     if (xLocation < x && abs(xDistanceOff) > ERROR_MARGIN)
     {
       XMotor.setVelocity(X_VELOCITY, percent);
@@ -430,8 +411,6 @@ void manualControlOverride()
   MMotor.stop(brake);
   if (markerDown)
     markerUp();
-  TouchLED.setFade(slow);
-
   calibrateAllAxes();
 }
 
@@ -633,6 +612,26 @@ void keepUserInformed(char C)
     TouchLED.setColor(purple);
   }
 
+  // limit triggered unexpectedly
+  else if (C == 'T')
+  {
+    // use return to main menu function
+  }
+
+  // paper is removed
+  else if (C == 'R')
+  {
+    TouchLED.setColor(red);
+    while (!TouchLED.pressing())
+    {
+      wait(0.5, seconds);
+      TouchLED.setFade(fast);
+      wait(0.5, seconds);
+      TouchLED.setBrightness(100);
+    }
+    TouchLED.off();
+  }
+
   // shutdown procedure
   else if (C == 'P')
   {
@@ -734,26 +733,6 @@ const float CUBE[][2][2] = {
   // Front face (bottom square)
   {{1, 1}, {4, 1}},      // bottom edge
   {{4, 1}, {4, 4}},      // right edge
-  {{4, 4}, {1, 4}},      // top edge
-  {{1, 4}, {1, 1}},      // left edge
- 
-  // Back face
-  {{2, 2}, {5, 2}},      // bottom edge
-  {{5, 2}, {5, 5}},      // right edge
-  {{5, 5}, {2, 5}},      // top edge
-  {{2, 5}, {2, 2}},      // left edge
- 
-  // Connecting edges (front to back)
-  {{1, 1}, {2, 2}},      // bottom-left
-  {{4, 1}, {5, 2}},      // bottom-right
-  {{4, 4}, {5, 5}},      // top-right
-  {{1, 4}, {2, 5}}       // top-left
-};
-
-const float BAD_CUBE[][2][2] = {
-  // Front face (bottom square)
-  {{1, 1}, {4, 1}},      // bottom edge
-  {{4, 1}, {4, 4}},      // right edge
   {{4, 4}, {0.2, 4}},      // top edge
   {{0.2, 4}, {0.2, 0.5}},      // left edge
  
@@ -770,13 +749,14 @@ const float BAD_CUBE[][2][2] = {
   {{0.2, 3.5}, {2.8, 5}}       // top-left
 };
 
-
 const float AUTOMATED_TOLERANCE = 0.05;
 
 void automatedDrawing(const float segments[][2][2], const int segs) {
 	float xloc = 0; float yloc = 0;
 	
 	bool markerDownYet = false;
+
+  Brain.Timer.reset();
 	
 	for (int cseg=0; cseg<segs; cseg++) {
 		// TODO: convert to inches
@@ -798,7 +778,11 @@ void automatedDrawing(const float segments[][2][2], const int segs) {
     penPressure(true);
 		moveTo(segments[cseg][1][0], segments[cseg][1][1]);
     penPressure(false);
-	}
+
+    Brain.Screen.clearLine(1);
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("ETime: ", Brain.Timer.value());
+  }
 }
 
 void exitRobot()
@@ -846,8 +830,7 @@ int main() {
       case 1: // Automator
         TouchLED.setBlink(orange, 0.5, 0.5);
         //Brain.Screen.clearScreen();
-		
-        automatedDrawing(BAD_CUBE, 12);
+        automatedDrawing(CUBE, 12);
 
         //automatedDrawing(SEG_TEST, 3);
         wait(2, seconds);
@@ -870,9 +853,10 @@ int main() {
         {
 
         }
-        
-        keepUserInformed('S');
-
+        while (!TouchLED.pressing())
+        {
+          keepUserInformed('S');
+        }
         break;
 
       case 3: // Recalibration
@@ -897,6 +881,6 @@ int main() {
         running = false;
     }
   }
-  
-  Brain.ProgramStop();
+
+  Brain.programStop();
 }
