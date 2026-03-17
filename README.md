@@ -1,6 +1,6 @@
 **Summative Project for 1A Term**
 
-Caelan, Alex, Darsh, Ishan
+Caelan, Alex, Nick, Ishan
 
 **Pen plotting robot**
 
